@@ -1,9 +1,4 @@
-CC = gcc
-
-SRC = ./src/*.c
-INC = ./include
-
-OUTPUT = bin/
 
 all:
-	$(CC) $(SRC) -I$(INC) -o $(OUTPUT)
+	gcc src/server.c -I./include -o bin/server
+	gcc src/client.c -I./include -o bin/client
