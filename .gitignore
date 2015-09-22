@@ -1,4 +1,4 @@
-./bin
+bin/
 
 # Object files
 *.o
