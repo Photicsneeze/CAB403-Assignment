@@ -18,15 +18,15 @@ int main(int argc, char *argv[])
 
     /* Check the user provided the correct arguments. */
     if (argc != 3) {
-        printf("Usage: ./client <hostname> <port>\n");
+        printf("Usage: %s <hostname> <port>\n", argv[0]);
         exit(EXIT_FAILURE);
     }
 
     /* Set critera for the addresses returned by getaddrinfo. */
-    hints.ai_family = AF_INET;
-    hints.ai_socktype = SOCK_STREAM;
-    hints.ai_protocol = 0;
-    hints.ai_flags = 0;
+    hints.ai_family =   AF_INET;        /* Use IPv4 internet protocols */
+    hints.ai_socktype = SOCK_STREAM;    /* Use connection-based byte streams */
+    hints.ai_protocol = 0;              /* Any protocol */
+    hints.ai_flags =    0;              /* No flags */
 
     /* Get address information of the server. Returns a list of all matches to host, port & hints. */
     if ((err = getaddrinfo(argv[1], argv[2], &hints, &addr_list)) != 0) {

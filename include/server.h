@@ -5,11 +5,20 @@
  */
 
 /* ---- Includes ---- */
+#include <errno.h>          /* For perror() */
+#include <netdb.h>          /* For hostent struct */
+#include <netinet/in.h>     /* Contains structures for internet domain addresses */
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/socket.h>     /* Needed for using sockets */
+#include <sys/types.h>      /* Contains definitions of data types used in system calls */
+#include <unistd.h>         /* For close() */
 
 /* ---- Defines ---- */
-#define DEFAULT_PORT	12345
+#define LISTEN_BACKLOG	10
+
+/* typedef to remove need for struct. */
+typedef struct addrinfo addrinfo;
 
 /* ---- Function Declarations ---- */
 
