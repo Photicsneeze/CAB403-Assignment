@@ -10,11 +10,13 @@
 /* ---- Function Definitions ---- */
 int main(int argc, char *argv[])
 {
-	int         err;                /* Error code for getaddrinfo() */
-    int         socket_descriptor;
-    addrinfo    hints;              /* Used to set criteria for getaddrinfo() */
-    addrinfo    *addr_list;         /* Linked list of addresses returned by getaddrinfo() */
-    addrinfo    *addr;              /* Pointer to individual address in addr_list */
+	int         err;                       /* Error code for getaddrinfo() */
+    int         sock_fd;
+    int         new_sock_fd;
+    addrinfo    hints;                      /* Used to set criteria for getaddrinfo() */
+    addrinfo    *addr_list;                 /* Linked list of addresses returned by getaddrinfo() */
+    addrinfo    *addr;                      /* Pointer to individual address in addr_list */
+    char        recv_buf[RECV_BUF_SIZE];    /* Buffer to store data received from client */
 
     /* Check the user provided the correct arguments. */
     if (argc != 2) {
@@ -37,32 +39,44 @@ int main(int argc, char *argv[])
     for (addr = addr_list; addr != NULL; addr = addr->ai_next) {
 
         /* Create socket using addrinfo. */
-        if ((socket_descriptor = socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol)) == -1) {
+        if ((sock_fd = socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol)) == -1) {
             continue; /* Creating socket failed so move onto the next address in the list. */
         }
 
         /* Bind using opened socket. */
-        if (bind(socket_descriptor, addr->ai_addr, addr->ai_addrlen) == 0) {
+        if (bind(sock_fd, addr->ai_addr, addr->ai_addrlen) == 0) {
             break; /* Bind succeded. */
         }
 
-        close(socket_descriptor); /* Bind failed for this address, so close. */
+        close(sock_fd); /* Bind failed for this address, so close. */
     }
 
     if (addr == NULL) { /* No bind successful. */
-        printf("Could not bind.\n");
+        perror("Could not bind");
         exit(EXIT_FAILURE);
     }
 
     /* Start listnening. */
-	if (listen(socket_descriptor, LISTEN_BACKLOG) == -1) {
-		perror("listen");
+	if (listen(sock_fd, LISTEN_BACKLOG) == -1) {
+		perror("Error listening");
 		exit(EXIT_FAILURE);
 	}
 
 	/* Loop forever. */
 	for (;;) {
+        if ((new_sock_fd = accept(sock_fd, addr->ai_addr, &addr->ai_addrlen)) == -1) {
+            perror("Error accepting connection");
+            exit(EXIT_FAILURE);
+        }
 
+        if (recv(new_sock_fd, recv_buf, RECV_BUF_SIZE, NO_FLAGS) == -1) {
+            perror("Error receiving data");
+            exit(EXIT_FAILURE);
+        }
+
+        printf("%s\n", recv_buf);
+
+        close(new_sock_fd);
 	}
 
 	return EXIT_SUCCESS;

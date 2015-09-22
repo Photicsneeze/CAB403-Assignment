@@ -54,10 +54,17 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
+    /* Attempt to send 1 message to make sure it works. REMOVE LATER */
+    if (send(socket_descriptor, "test", 4, NO_FLAGS) != 4) {
+        printf("Failed to send.\n");
+        exit(EXIT_FAILURE);
+    }
+
     // While connection remains open
         // send & receive data using send & recv OR write & read
 
-    // Close connection using close() system call
+    /* Close socket. */
+    close(socket_descriptor);
 
-    return EXIT_SUCCESS;
+    exit(EXIT_SUCCESS);
 }

@@ -15,6 +15,7 @@
 #include <unistd.h>         /* For close() */
 
 /* ---- Defines ---- */
+#define NO_FLAGS    0
 
 /* typedef to remove need for struct. */
 typedef struct addrinfo addrinfo;

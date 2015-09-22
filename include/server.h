@@ -15,7 +15,9 @@
 #include <unistd.h>         /* For close() */
 
 /* ---- Defines ---- */
+#define NO_FLAGS    	0
 #define LISTEN_BACKLOG	10
+#define RECV_BUF_SIZE	256
 
 /* typedef to remove need for struct. */
 typedef struct addrinfo addrinfo;
