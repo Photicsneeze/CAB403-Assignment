@@ -8,6 +8,7 @@
 #include <errno.h>          /* For perror() */
 #include <netdb.h>          /* For hostent struct */
 #include <netinet/in.h>     /* Contains structures for internet domain addresses */
+#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -23,6 +24,10 @@
 typedef struct addrinfo addrinfo;
 
 /* ---- Function Declarations ---- */
+static void *write_socket(void *sock_fd);
+
+void read_socket(int sock_fd);
+
 int create_connection(char *host, char *port);
 
 int get_input(char *msg, char *input_str);

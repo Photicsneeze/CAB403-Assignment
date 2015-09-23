@@ -1,4 +1,5 @@
-bin/
+bin/server
+bin/client
 
 # Object files
 *.o
