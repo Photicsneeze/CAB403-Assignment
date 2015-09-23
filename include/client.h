@@ -21,3 +21,4 @@
 typedef struct addrinfo addrinfo;
 
 /* ---- Function Declarations ---- */
+int create_connection(char *host, char *port);

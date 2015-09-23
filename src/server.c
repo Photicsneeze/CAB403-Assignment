@@ -1,7 +1,7 @@
 /*
- *	CAB403 Assignment - Semester 2 2015
+ *  CAB403 Assignment - Semester 2 2015
  *
- *	Created by Lachlan Cesca & Shaun Karran
+ *  Created by Lachlan Cesca & Shaun Karran
  */
 
 /* ---- Includes ---- */
@@ -24,9 +24,11 @@ int main(int argc, char *argv[])
     /* Function to create socket, bind it and mark it to accept incoming connections. */
     sock_fd = create_passive_socket(argv[1], addr);
 
-	/* Main server loop. Accept incomming connections, send/recv data, close connection. */
-	for (;;) {
-        /* Accept a new connection, returns a new socket_descriptor, leaving original in listening state. */
+    /* Main server loop. Accept incomming connections, send/recv data, close connection. */
+    for (;;) {
+        /* Accept a new connection, returns a new socket_descriptor, leaving original in listening state.
+         * Accept is a blocking function and will wait for a connection if none available.
+         */
         if ((new_sock_fd = accept(sock_fd, addr->ai_addr, &addr->ai_addrlen)) == -1) {
             perror("Error accepting connection");
             exit(EXIT_FAILURE);
@@ -43,16 +45,16 @@ int main(int argc, char *argv[])
 
         /* Close the newly created socket. */
         close(new_sock_fd);
-	}
+    }
 
-	exit(EXIT_SUCCESS);
+    exit(EXIT_SUCCESS);
 }
 
 int create_passive_socket(char *port, addrinfo *addr) {
-    int         err;                        /* Error code for getaddrinfo() */
-    int         sock_fd;                    /* Socket descriptor to return */
-    addrinfo    hints;                      /* Used to set criteria for getaddrinfo() */
-    addrinfo    *addr_list;                 /* Linked list of addresses returned by getaddrinfo() */
+    int         err;            /* Error code for getaddrinfo() */
+    int         sock_fd;        /* Socket descriptor to return */
+    addrinfo    hints;          /* Used to set criteria for getaddrinfo() */
+    addrinfo    *addr_list;     /* Linked list of addresses returned by getaddrinfo() */
 
     /* Set critera for the addresses returned by getaddrinfo. */
     hints.ai_family =   AF_INET;        /* Use IPv4 internet protocols */
