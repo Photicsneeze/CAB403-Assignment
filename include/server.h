@@ -23,4 +23,4 @@
 typedef struct addrinfo addrinfo;
 
 /* ---- Function Declarations ---- */
-
+int create_passive_socket(char *port, addrinfo *addr);
