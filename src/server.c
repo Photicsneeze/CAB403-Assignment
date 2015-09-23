@@ -10,20 +10,26 @@
 /* ---- Function Definitions ---- */
 int main(int argc, char *argv[])
 {
+    char        *port;
     int         ret;                    /* Return value for recv() */
     int         sock_fd;                /* Initial socket descriptor */
     int         new_sock_fd;            /* Socket descriptor for new connection */
     addrinfo    *addr;                  /* Contains internet address information of server */
     char        recv_buf[BUF_SIZE];     /* Buffer to store data received from client */
+    char        send_buf[BUF_SIZE];     /* Buffer to store data to send to the client */
 
-    /* Check the user provided the correct arguments. */
-    if (argc != 2) {
+    /* Check the user provided the correct arguments. If no port provided, use default. */
+    if (argc < 2) {
+        printf("No port provided. Using default port %s.\n", DEFAULT_PORT);
+        port = DEFAULT_PORT;
+    } else if (argc == 2) {
+        port = argv[1];
+    } else {
         printf("Usage: %s <port>\n", argv[0]);
         exit(EXIT_FAILURE);
     }
 
-    /* Function to create socket, bind it and mark it to accept incoming connections. */
-    sock_fd = create_passive_socket(argv[1], addr);
+    sock_fd = create_passive_socket(port, addr);
 
     /* Main server loop. Accept incomming connections, send/recv data, close connection. */
     for (;;) {
@@ -31,16 +37,23 @@ int main(int argc, char *argv[])
          * Accept is a blocking function and will wait for a connection if none available.
          */
         if ((new_sock_fd = accept(sock_fd, addr->ai_addr, &addr->ai_addrlen)) == -1) {
-            perror("Error accepting connection");
-            exit(EXIT_FAILURE);
+            perror("accept");
+            continue; /* Failed to accept connection, continue to start on main loop. */
         }
 
         printf("Connection accepted.\n");
 
         for (;;) {
+            /* Send the string input by the user to the server. */
+            //request_login(new_sock_fd);
+            // if (send(new_sock_fd, password_prompt, BUF_SIZE, NO_FLAGS) == -1) {
+            //     perror("send");
+            //     exit(EXIT_FAILURE);
+            // }
+
             /* Receive message from new socket and store data in buffer. */
             if ((ret = recv(new_sock_fd, recv_buf, BUF_SIZE, NO_FLAGS)) == -1) {
-                perror("Error receiving data");
+                perror("recv");
                 exit(EXIT_FAILURE);
             } else if (ret == 0) {
                 printf("Connection closed.\n");
@@ -52,12 +65,49 @@ int main(int argc, char *argv[])
         }
 
         /* Close the newly created socket once client if finished. */
-        //close(new_sock_fd);
+        close(new_sock_fd);
     }
+
+    /* Close socket. */
+    close(sock_fd);
 
     exit(EXIT_SUCCESS);
 }
 
+// bool request_login(int sock_fd)
+// {
+//     char username[8];
+//     char password[8];
+
+//     if (send(sock_fd, welcome_message, BUF_SIZE, NO_FLAGS) == -1) {
+//         perror("send");
+//         exit(EXIT_FAILURE);
+//     }
+//     if (send(sock_fd, login_prompt, BUF_SIZE, NO_FLAGS) == -1) {
+//         perror("send");
+//         exit(EXIT_FAILURE);
+//     }
+
+//     if (send(sock_fd, username_prompt, BUF_SIZE, NO_FLAGS) == -1) {
+//         perror("send");
+//         exit(EXIT_FAILURE);
+//     }
+//     if (recv(sock_fd, username, 8, NO_FLAGS) == -1) {
+//         perror("recv");
+//         exit(EXIT_FAILURE);
+//     }
+
+//     if (send(sock_fd, password_prompt, BUF_SIZE, NO_FLAGS) == -1) {
+//         perror("send");
+//         exit(EXIT_FAILURE);
+//     }
+//     if (recv(sock_fd, password, 8, NO_FLAGS) == -1) {
+//         perror("recv");
+//         exit(EXIT_FAILURE);
+//     }
+// }
+
+/* Function to create socket, bind it and mark it to accept incoming connections. */
 int create_passive_socket(char *port, addrinfo *addr)
 {
     int         ret;            /* Return value for getaddrinfo() */
@@ -74,6 +124,7 @@ int create_passive_socket(char *port, addrinfo *addr)
     /* Get address information of the server. Returns a list of all matches to host, port & hints. */
     if ((ret = getaddrinfo(NULL, port, &hints, &addr_list)) != 0) {
         printf("Failed to get address info: %s\n", gai_strerror(ret));
+        exit(EXIT_FAILURE);
     }
 
     /* Attempt to bind to each address from the list. If bind successful, leave loop. */
@@ -90,13 +141,13 @@ int create_passive_socket(char *port, addrinfo *addr)
     }
 
     if (addr == NULL) { /* No bind successful. */
-        perror("Could not bind");
+        perror("bind");
         exit(EXIT_FAILURE);
     }
 
     /* Start listnening. */
     if (listen(sock_fd, LISTEN_BACKLOG) == -1) {
-        perror("Error listening");
+        perror("listen");
         exit(EXIT_FAILURE);
     }
 
