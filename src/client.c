@@ -10,7 +10,9 @@
 /* ---- Function Definitions ---- */
 int main(int argc, char *argv[])
 {
-    int         sock_fd;
+    int     sock_fd;
+    char    input_str[BUF_SIZE];
+    int     input_len;
 
     /* Check the user provided the correct arguments. */
     if (argc != 3) {
@@ -21,14 +23,16 @@ int main(int argc, char *argv[])
     /* Function to create socket and connect to the server. */
     sock_fd = create_connection(argv[1], argv[2]);
 
-    /* Attempt to send 1 message to make sure it works. REMOVE LATER */
-    if (send(sock_fd, "test", 4, NO_FLAGS) != 4) {
-        printf("Failed to send.\n");
-        exit(EXIT_FAILURE);
-    }
-
     // While connection remains open
-        // send & receive data using send & recv OR write & read
+    for (;;) {
+        input_len = get_input("Please enter something: ", input_str);
+
+        /* Attempt to send 1 message to make sure it works. REMOVE LATER */
+        if (send(sock_fd, input_str, input_len, NO_FLAGS) != input_len) {
+            printf("Failed to send.\n");
+            exit(EXIT_FAILURE);
+        }
+    }
 
     /* Close socket. */
     close(sock_fd);
@@ -75,5 +79,28 @@ int create_connection(char *host, char *port) {
         exit(EXIT_FAILURE);
     }
 
+    freeaddrinfo(addr_list); /* Free dynamically allocated memory from getaddrinfo(). */
+
     return sock_fd;
+}
+
+int get_input(char *msg, char *input_str)
+{
+    int input_len;
+    char *new_line;
+
+    printf("%s", msg);
+    fgets(input_str, BUF_SIZE, stdin);
+
+    /* Replace the new line inserted by pressing the enter key with end of line. */
+    if ((new_line = strchr(input_str, '\n')) != NULL) {
+        *new_line = '\0';
+    } else {
+        /* If input is longer than BUF_SIZE, getchar to clear input stream */
+        while (getchar() != '\n') { ; }
+    }
+
+    input_len = strlen(input_str) + 1;
+
+    return input_len;
 }

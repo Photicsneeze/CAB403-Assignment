@@ -10,15 +10,19 @@
 #include <netinet/in.h>     /* Contains structures for internet domain addresses */
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/socket.h>     /* Needed for using sockets */
 #include <sys/types.h>      /* Contains definitions of data types used in system calls */
 #include <unistd.h>         /* For close() */
 
 /* ---- Defines ---- */
 #define NO_FLAGS    0
+#define BUF_SIZE    256
 
 /* typedef to remove need for struct. */
 typedef struct addrinfo addrinfo;
 
 /* ---- Function Declarations ---- */
 int create_connection(char *host, char *port);
+
+int get_input(char *msg, char *input_str);
