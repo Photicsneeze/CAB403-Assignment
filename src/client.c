@@ -10,9 +10,11 @@
 /* ---- Function Definitions ---- */
 int main(int argc, char *argv[])
 {
-    int     sock_fd;
-    char    input_str[BUF_SIZE];
-    int     input_len;
+    int         sock_fd;
+    char        recv_buf[BUF_SIZE];     /* Buffer to store data received from server */
+    char        send_buf[BUF_SIZE];     /* Buffer to store data to send to the server */
+    int         input_len;
+    pthread_t   read_thread, write_thread;
 
     /* Check the user provided the correct arguments. */
     if (argc != 3) {
@@ -23,21 +25,43 @@ int main(int argc, char *argv[])
     /* Function to create socket and connect to the server. */
     sock_fd = create_connection(argv[1], argv[2]);
 
-    // While connection remains open
-    for (;;) {
-        input_len = get_input("Please enter something: ", input_str);
+    if (pthread_create(&write_thread, NULL, write_socket, (void *) &sock_fd) != 0) {
+        perror("pthread_create");
+        exit(EXIT_FAILURE);
+    }
 
-        /* Attempt to send 1 message to make sure it works. REMOVE LATER */
-        if (send(sock_fd, input_str, input_len, NO_FLAGS) != input_len) {
-            printf("Failed to send.\n");
-            exit(EXIT_FAILURE);
-        }
+    if (pthread_join(write_thread, NULL) != 0) {
+        perror("pthread_join");
+        exit(EXIT_FAILURE);
     }
 
     /* Close socket. */
     close(sock_fd);
 
     exit(EXIT_SUCCESS);
+}
+
+static void *write_socket(void *data)
+{
+    int     *sock_fd;
+    char    send_buf[BUF_SIZE];
+    int     input_len;
+
+    sock_fd = (int *) data;
+
+    for (;;) {
+        input_len = get_input("", send_buf);
+
+        if (send(*sock_fd, send_buf, input_len, NO_FLAGS) != input_len) {
+            perror("send");
+            exit(EXIT_FAILURE);
+        }
+    }
+}
+
+void read_socket(int sock_fd)
+{
+
 }
 
 int create_connection(char *host, char *port) {
@@ -56,6 +80,7 @@ int create_connection(char *host, char *port) {
     /* Get address information of the server. Returns a list of all matches to host, port & hints. */
     if ((err = getaddrinfo(host, port, &hints, &addr_list)) != 0) {
         printf("Failed to get address info: %s\n", gai_strerror(err));
+        exit(EXIT_FAILURE);
     }
 
     /* Attempt to conenct to each address from the list. If connection made, leave loop. */
@@ -72,7 +97,7 @@ int create_connection(char *host, char *port) {
     }
 
     if (addr == NULL) { /* No connections successful. */
-        printf("Could not connect.\n");
+        perror("connect");
         exit(EXIT_FAILURE);
     }
 
