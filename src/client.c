@@ -60,18 +60,15 @@ int create_connection(char *host, char *port) {
 
     /* Attempt to conenct to each address from the list. If connection made, leave loop. */
     for (addr = addr_list; addr != NULL; addr = addr->ai_next) {
-
         /* Create socket using addrinfo. */
-        if ((sock_fd = socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol)) == -1) {
-            continue; /* Creating socket failed so move onto the next address in the list. */
-        }
+        if ((sock_fd = socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol)) != -1) {
+            /* Make connection using opened socket. */
+            if (connect(sock_fd, addr->ai_addr, addr->ai_addrlen) == 0) {
+                break; /* Connection succeded. */
+            }
 
-        /* Make connection using opened socket. */
-        if (connect(sock_fd, addr->ai_addr, addr->ai_addrlen) == 0) {
-            break; /* Connection succeded. */
+            close(sock_fd); /* Connection failed for this address, so close. */
         }
-
-        close(sock_fd); /* Connection failed for this address, so close. */
     }
 
     if (addr == NULL) { /* No connections successful. */

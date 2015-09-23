@@ -78,7 +78,6 @@ int create_passive_socket(char *port, addrinfo *addr)
 
     /* Attempt to bind to each address from the list. If bind successful, leave loop. */
     for (addr = addr_list; addr != NULL; addr = addr->ai_next) {
-
         /* Create socket using addrinfo. */
         if ((sock_fd = socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol)) != -1) {
             /* Bind using opened socket. */
