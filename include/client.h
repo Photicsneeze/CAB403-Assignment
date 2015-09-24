@@ -26,7 +26,7 @@ typedef struct addrinfo addrinfo;
 /* ---- Function Declarations ---- */
 static void *write_socket(void *sock_fd);
 
-void read_socket(int sock_fd);
+static void *read_socket(void *data);
 
 int create_connection(char *host, char *port);
 

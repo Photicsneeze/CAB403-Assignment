@@ -11,9 +11,6 @@
 int main(int argc, char *argv[])
 {
     int         sock_fd;
-    char        recv_buf[BUF_SIZE];     /* Buffer to store data received from server */
-    char        send_buf[BUF_SIZE];     /* Buffer to store data to send to the server */
-    int         input_len;
     pthread_t   read_thread, write_thread;
 
     /* Check the user provided the correct arguments. */
@@ -30,7 +27,17 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
+    if (pthread_create(&read_thread, NULL, read_socket, (void *) &sock_fd) != 0) {
+        perror("pthread_create");
+        exit(EXIT_FAILURE);
+    }
+
     if (pthread_join(write_thread, NULL) != 0) {
+        perror("pthread_join");
+        exit(EXIT_FAILURE);
+    }
+
+    if (pthread_join(read_thread, NULL) != 0) {
         perror("pthread_join");
         exit(EXIT_FAILURE);
     }
@@ -59,9 +66,22 @@ static void *write_socket(void *data)
     }
 }
 
-void read_socket(int sock_fd)
+static void *read_socket(void *data)
 {
+    int     *sock_fd;
+    char    recv_buf[BUF_SIZE];
 
+    sock_fd = (int *) data;
+
+    for (;;) {
+        if (recv(*sock_fd, recv_buf, BUF_SIZE, NO_FLAGS) == -1) {
+            perror("recv");
+            exit(EXIT_FAILURE);
+        }
+
+        printf("%s", recv_buf);
+        fflush(stdout);
+    }
 }
 
 int create_connection(char *host, char *port) {
@@ -114,13 +134,13 @@ int get_input(char *msg, char *input_str)
     printf("%s", msg);
     fgets(input_str, BUF_SIZE, stdin);
 
-    /* Replace the new line inserted by pressing the enter key with end of line. */
-    if ((new_line = strchr(input_str, '\n')) != NULL) {
-        *new_line = '\0';
-    } else {
-        /* If input is longer than BUF_SIZE, getchar to clear input stream */
-        while (getchar() != '\n') { ; }
-    }
+    // /* Replace the new line inserted by pressing the enter key with end of line. */
+    // if ((new_line = strchr(input_str, '\n')) != NULL) {
+    //     *new_line = '\0';
+    // } else {
+    //     /* If input is longer than BUF_SIZE, getchar to clear input stream */
+    //     while (getchar() != '\n') { ; }
+    // }
 
     input_len = strlen(input_str) + 1;
 
