@@ -9,6 +9,7 @@
 #include <netdb.h>          /* For hostent struct */
 #include <netinet/in.h>     /* Contains structures for internet domain addresses */
 #include <pthread.h>
+#include <signal.h>         /* To handle SIGINT */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -17,8 +18,9 @@
 #include <unistd.h>         /* For close() */
 
 /* ---- Defines ---- */
-#define NO_FLAGS    0
-#define BUF_SIZE    256
+#define NO_FLAGS        0
+#define BUF_SIZE        256
+#define SHUTDOWN_SIGNAL "QUIT"
 
 /* typedef to remove need for struct. */
 typedef struct addrinfo addrinfo;
