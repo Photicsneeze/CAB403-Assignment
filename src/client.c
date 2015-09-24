@@ -59,8 +59,8 @@ static void *write_socket(void *data)
     for (;;) {
         input_len = get_input("", send_buf);
 
-        if (send(*sock_fd, send_buf, input_len, NO_FLAGS) != input_len) {
-            perror("send");
+        if (write(*sock_fd, send_buf, input_len) != input_len) {
+            perror("write");
             exit(EXIT_FAILURE);
         }
     }
@@ -74,9 +74,14 @@ static void *read_socket(void *data)
     sock_fd = (int *) data;
 
     for (;;) {
-        if (recv(*sock_fd, recv_buf, BUF_SIZE, NO_FLAGS) == -1) {
-            perror("recv");
+        if (read(*sock_fd, recv_buf, BUF_SIZE) == -1) {
+            perror("read");
             exit(EXIT_FAILURE);
+        }
+
+        if (strcmp(recv_buf, SHUTDOWN_SIGNAL) == 0) {
+            printf("\nReceived shutdown signal from server.\n");
+            pthread_exit(NULL);
         }
 
         printf("%s", recv_buf);
@@ -134,13 +139,13 @@ int get_input(char *msg, char *input_str)
     printf("%s", msg);
     fgets(input_str, BUF_SIZE, stdin);
 
-    // /* Replace the new line inserted by pressing the enter key with end of line. */
-    // if ((new_line = strchr(input_str, '\n')) != NULL) {
-    //     *new_line = '\0';
-    // } else {
-    //     /* If input is longer than BUF_SIZE, getchar to clear input stream */
-    //     while (getchar() != '\n') { ; }
-    // }
+    /* Replace the new line inserted by pressing the enter key with end of line. */
+    if ((new_line = strchr(input_str, '\n')) != NULL) {
+        *new_line = '\0';
+    } else {
+        /* If input is longer than BUF_SIZE, getchar to clear input stream */
+        while (getchar() != '\n') { ; }
+    }
 
     input_len = strlen(input_str) + 1;
 

@@ -12,11 +12,11 @@ int main(int argc, char *argv[])
 {
     char        *port;
     int         ret;                    /* Return value for recv() */
-    int         sock_fd;                /* Initial socket descriptor */
-    int         new_sock_fd;            /* Socket descriptor for new connection */
     addrinfo    *addr;                  /* Contains internet address information of server */
     char        recv_buf[BUF_SIZE];     /* Buffer to store data received from client */
     char        send_buf[BUF_SIZE];     /* Buffer to store data to send to the client */
+    char        username[8];
+    char        password[6];
 
     /* Check the user provided the correct arguments. If no port provided, use default. */
     if (argc < 2) {
@@ -29,6 +29,8 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
+    signal(SIGINT, shutdown_server); /* Tell the program which function to call when ctrl + c is pressed. */
+
     sock_fd = create_passive_socket(port, addr);
 
     /* Main server loop. Accept incomming connections, send/recv data, close connection. */
@@ -36,35 +38,57 @@ int main(int argc, char *argv[])
         /* Accept a new connection, returns a new socket_descriptor, leaving original in listening state.
          * Accept is a blocking function and will wait for a connection if none available.
          */
+        printf("Waiting for connection...\n");
         if ((new_sock_fd = accept(sock_fd, addr->ai_addr, &addr->ai_addrlen)) == -1) {
             perror("accept");
             continue; /* Failed to accept connection, continue to start on main loop. */
         }
+        printf("Connection accepted.\n\n\n");
 
-        printf("Connection accepted.\n");
-
-        for (;;) {
-            /* Send the string input by the user to the server. */
-            //request_login(new_sock_fd);
-            // if (send(new_sock_fd, password_prompt, BUF_SIZE, NO_FLAGS) == -1) {
-            //     perror("send");
-            //     exit(EXIT_FAILURE);
-            // }
-
-            /* Receive message from new socket and store data in buffer. */
-            if ((ret = recv(new_sock_fd, recv_buf, BUF_SIZE, NO_FLAGS)) == -1) {
-                perror("recv");
-                exit(EXIT_FAILURE);
-            } else if (ret == 0) {
-                printf("Connection closed.\n");
-                break;
-            }
-
-            /* Just printing received data for testing purposes. */
-            printf("%s\n", recv_buf);
+        /* Send welcome message. */
+        printf("Sending welcome message...\n");
+        if (write(new_sock_fd, WELCOME_MESSAGE, BUF_SIZE) == -1) {
+            perror("write");
+            exit(EXIT_FAILURE);
         }
 
+        /* Prompt for username. */
+        printf("Sending username prompt...\n");
+        if (write(new_sock_fd, USERNAME_PROMPT, BUF_SIZE) == -1) {
+            perror("write");
+            exit(EXIT_FAILURE);
+        }
+        printf("Waiting for username from client...\n");
+        if ((ret = read(new_sock_fd, username, 8)) == -1) {
+            perror("read");
+            exit(EXIT_FAILURE);
+        }
+        printf("Username received.\n");
+
+        /* Prompt for password. */
+        printf("Sending password prompt...\n");
+        if (write(new_sock_fd, PASSWORD_PROMPT, BUF_SIZE) == -1) {
+            perror("write");
+            exit(EXIT_FAILURE);
+        }
+        printf("Waiting for password from client...\n");
+        if ((ret = read(new_sock_fd, password, 6)) == -1) {
+            perror("read");
+            exit(EXIT_FAILURE);
+        }
+        printf("Password received.\n");
+
+        /* Receive message from new socket and store data in buffer. */
+        // if ((ret = recv(new_sock_fd, recv_buf, BUF_SIZE, NO_FLAGS)) == -1) {
+        //     perror("recv");
+        //     exit(EXIT_FAILURE);
+        // } else if (ret == 0) {
+        //     printf("Connection closed.\n");
+        //     break;
+        // }
+
         /* Close the newly created socket once client if finished. */
+        printf("Closing connection.\n");
         close(new_sock_fd);
     }
 
@@ -73,39 +97,6 @@ int main(int argc, char *argv[])
 
     exit(EXIT_SUCCESS);
 }
-
-// bool request_login(int sock_fd)
-// {
-//     char username[8];
-//     char password[8];
-
-//     if (send(sock_fd, welcome_message, BUF_SIZE, NO_FLAGS) == -1) {
-//         perror("send");
-//         exit(EXIT_FAILURE);
-//     }
-//     if (send(sock_fd, login_prompt, BUF_SIZE, NO_FLAGS) == -1) {
-//         perror("send");
-//         exit(EXIT_FAILURE);
-//     }
-
-//     if (send(sock_fd, username_prompt, BUF_SIZE, NO_FLAGS) == -1) {
-//         perror("send");
-//         exit(EXIT_FAILURE);
-//     }
-//     if (recv(sock_fd, username, 8, NO_FLAGS) == -1) {
-//         perror("recv");
-//         exit(EXIT_FAILURE);
-//     }
-
-//     if (send(sock_fd, password_prompt, BUF_SIZE, NO_FLAGS) == -1) {
-//         perror("send");
-//         exit(EXIT_FAILURE);
-//     }
-//     if (recv(sock_fd, password, 8, NO_FLAGS) == -1) {
-//         perror("recv");
-//         exit(EXIT_FAILURE);
-//     }
-// }
 
 /* Function to create socket, bind it and mark it to accept incoming connections. */
 int create_passive_socket(char *port, addrinfo *addr)
@@ -154,4 +145,19 @@ int create_passive_socket(char *port, addrinfo *addr)
     freeaddrinfo(addr_list); /* Free dynamically allocated memory from getaddrinfo(). */
 
     return sock_fd;
+}
+
+void shutdown_server(int sig)
+{
+    printf("Server is shutting down.\n"); /* DO NOT CALL PRINTF. BEST PRACTICE TO SET A FLAG TO HANDLE IN MAIN. */
+
+    /* Send message to client that server is shutting down. */
+    if (new_sock_fd != 0) {
+        if (write(new_sock_fd, SHUTDOWN_SIGNAL, BUF_SIZE) == -1) {
+            perror("write");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    exit(EXIT_SUCCESS);
 }
