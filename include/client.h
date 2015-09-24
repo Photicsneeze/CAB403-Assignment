@@ -10,6 +10,7 @@
 #include <netinet/in.h>     /* Contains structures for internet domain addresses */
 #include <pthread.h>
 #include <signal.h>         /* To handle SIGINT */
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -24,6 +25,9 @@
 
 /* typedef to remove need for struct. */
 typedef struct addrinfo addrinfo;
+
+/* ---- Global Variables ---- */
+static bool quit = false;
 
 /* ---- Function Declarations ---- */
 static void *write_socket(void *sock_fd);

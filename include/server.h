@@ -5,12 +5,12 @@
  */
 
 /* ---- Includes ---- */
-#include <stdbool.h>
 #include <errno.h>          /* For perror() */
 #include <netdb.h>          /* For hostent struct */
 #include <netinet/in.h>     /* Contains structures for internet domain addresses */
 #include <pthread.h>
 #include <signal.h>         /* To handle SIGINT */
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

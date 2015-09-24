@@ -56,7 +56,7 @@ static void *write_socket(void *data)
 
     sock_fd = (int *) data;
 
-    for (;;) {
+    while (!quit) {
         input_len = get_input("", send_buf);
 
         if (write(*sock_fd, send_buf, input_len) != input_len) {
@@ -64,6 +64,8 @@ static void *write_socket(void *data)
             exit(EXIT_FAILURE);
         }
     }
+
+    pthread_exit(NULL);
 }
 
 static void *read_socket(void *data)
@@ -80,7 +82,8 @@ static void *read_socket(void *data)
         }
 
         if (strcmp(recv_buf, SHUTDOWN_SIGNAL) == 0) {
-            printf("\nReceived shutdown signal from server.\n");
+            printf("\nReceived shutdown signal from server. Press any key to quit.\n");
+            quit = true;
             pthread_exit(NULL);
         }
 
