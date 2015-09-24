@@ -1,5 +1,6 @@
-bin/server
-bin/client
+/bin/server
+/bin/client
+/bin/hangman
 
 # Object files
 *.o
