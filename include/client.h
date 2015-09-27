@@ -19,9 +19,9 @@
 #include <unistd.h>         /* For close() */
 
 /* ---- Defines ---- */
-#define NO_FLAGS        0
-#define BUF_SIZE        256
-#define SHUTDOWN_SIGNAL "QUIT"
+#define NO_FLAGS            0
+#define BUF_SIZE            256
+#define DISCONNECT_SIGNAL   "QUIT"
 
 /* typedef to remove need for struct. */
 typedef struct addrinfo addrinfo;
