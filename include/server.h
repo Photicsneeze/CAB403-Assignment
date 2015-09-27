@@ -19,12 +19,14 @@
 #include <termios.h>        /* To stop terminal from echoing ^C */
 #include <unistd.h>         /* For close() */
 
+#include "authentication.h"
+
 /* ---- Defines ---- */
-#define DEFAULT_PORT    "12345"
-#define NO_FLAGS        0
-#define LISTEN_BACKLOG  10
-#define BUF_SIZE        256
-#define SHUTDOWN_SIGNAL "QUIT"
+#define DEFAULT_PORT        "12345"
+#define NO_FLAGS            0
+#define LISTEN_BACKLOG      10
+#define BUF_SIZE            256
+#define DISCONNECT_SIGNAL   "QUIT"
 
 /* ---- Menu Graphics ---- */
 const char *WELCOME_MESSAGE = "\n"
@@ -40,6 +42,17 @@ const char *LOGIN_PROMPT = "You are required to logon with your username and pas
 const char *USERNAME_PROMPT = "\nPlease enter your username --> ";
 const char *PASSWORD_PROMPT = "\nPlease enter your password --> ";
 
+const char *AUTH_FAILED = "\nYou entered either an incorrect username or password - disconnecting...\n";
+
+const char *MAIN_MENU = "\n"
+                        "\n"
+                        "===== Main Manu =====\n"
+                        "\n"
+                        "<1> Play Hangman\n"
+                        "<2> Show Leaderboard\n"
+                        "<3> Quit\n"
+                        "\n";
+
 /* typedef to remove need for struct. */
 typedef struct addrinfo addrinfo;
 
@@ -48,7 +61,9 @@ static int sock_fd;        /* Initial socket descriptor */
 static int new_sock_fd;    /* Socket descriptor for new connection */
 
 /* ---- Function Declarations ---- */
-bool request_login(int sock_fd);
+void get_username(char *username);
+
+void get_password(char *password);
 
 int create_passive_socket(char *port, addrinfo *addr);
 

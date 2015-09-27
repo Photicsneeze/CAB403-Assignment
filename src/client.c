@@ -81,8 +81,8 @@ static void *read_socket(void *data)
             exit(EXIT_FAILURE);
         }
 
-        if (strcmp(recv_buf, SHUTDOWN_SIGNAL) == 0) {
-            printf("\nReceived shutdown signal from server. Press any key to quit.\n");
+        if (strcmp(recv_buf, DISCONNECT_SIGNAL) == 0) {
+            printf("\nReceived disconnect signal from server. Press any key to quit.\n");
             quit = true;
             pthread_exit(NULL);
         }
