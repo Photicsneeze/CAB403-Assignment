@@ -17,6 +17,7 @@ int main(int argc, char *argv[])
     char        send_buf[BUF_SIZE];     /* Buffer to store data to send to the client */
     char        username[8];
     char        password[6];
+    int         menu_selection;
 
     /* Check the user provided the correct arguments. If no port provided, use default. */
     if (argc < 2) {
@@ -77,6 +78,10 @@ int main(int argc, char *argv[])
             exit(EXIT_FAILURE);
         }
 
+        menu_selection = get_menu_selection();
+
+        printf("%d\n", menu_selection);
+
         while (1);
 
         /* Receive message from new socket and store data in buffer. */
@@ -125,6 +130,26 @@ void get_password(char *password)
         exit(EXIT_FAILURE);
     }
     printf("Password received.\n");
+}
+
+int get_menu_selection()
+{
+    char *selection_str;
+
+    /* Prompt for main menu. */
+    printf("Sending menu selection prompt...\n");
+    if (write(new_sock_fd, MENU_PROMPT, BUF_SIZE) == -1) {
+        perror("write");
+        exit(EXIT_FAILURE);
+    }
+    printf("Waiting for menu selection from client...\n");
+    if (read(new_sock_fd, selection_str, BUF_SIZE) == -1) {
+        perror("read");
+        exit(EXIT_FAILURE);
+    }
+    printf("Menu selection received.\n");
+
+    return atoi(selection_str); /* Convert string to int. */
 }
 
 /* Function to create socket, bind it and mark it to accept incoming connections. */
