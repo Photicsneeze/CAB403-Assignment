@@ -50,10 +50,11 @@ const char *MAIN_MENU = "\n"
                         "\n"
                         "<1> Play Hangman\n"
                         "<2> Show Leaderboard\n"
-                        "<3> Quit\n"
-                        "\n";
+                        "<3> Quit\n";
 
-/* typedef to remove need for struct. */
+const char *MENU_PROMPT = "\nSelection option (1 - 3) --> ";
+
+/* typedef to remove need for struct keyword. */
 typedef struct addrinfo addrinfo;
 
 /* ---- Global Variables ---- */
@@ -64,6 +65,8 @@ static int new_sock_fd;    /* Socket descriptor for new connection */
 void get_username(char *username);
 
 void get_password(char *password);
+
+int get_menu_selection();
 
 int create_passive_socket(char *port, addrinfo *addr);
 

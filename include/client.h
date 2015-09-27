@@ -23,7 +23,7 @@
 #define BUF_SIZE            256
 #define DISCONNECT_SIGNAL   "QUIT"
 
-/* typedef to remove need for struct. */
+/* typedef to remove need for struct keyword. */
 typedef struct addrinfo addrinfo;
 
 /* ---- Global Variables ---- */
