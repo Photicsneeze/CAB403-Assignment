@@ -19,6 +19,8 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
+    signal(SIGINT, shutdown_client); /* Tell the program which function to call when ctrl + c is pressed. */
+
     /* Function to create socket and connect to the server. */
     sock_fd = create_connection(argv[1], argv[2]);
 
@@ -153,4 +155,9 @@ int get_input(char *msg, char *input_str)
     input_len = strlen(input_str) + 1;
 
     return input_len;
+}
+
+void shutdown_client(int sig)
+{
+    exit(EXIT_SUCCESS);
 }
