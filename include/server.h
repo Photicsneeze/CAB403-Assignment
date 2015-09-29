@@ -27,6 +27,9 @@
 #define LISTEN_BACKLOG      10
 #define BUF_SIZE            256
 #define DISCONNECT_SIGNAL   "QUIT"
+#define PLAY_HANGMAN        1
+#define SHOW_LEADERBOARD    2
+#define QUIT                3
 
 /* ---- Menu Graphics ---- */
 const char *WELCOME_MESSAGE = "\n"
@@ -69,5 +72,7 @@ void get_password(char *password);
 int get_menu_selection();
 
 int create_passive_socket(char *port, addrinfo *addr);
+
+void disconnect_client(int sock_fd);
 
 void shutdown_server(int sig);

@@ -64,10 +64,7 @@ int main(int argc, char *argv[])
                 exit(EXIT_FAILURE);
             }
 
-            /* Send message to client to disconnect. */
-            write(new_sock_fd, DISCONNECT_SIGNAL, BUF_SIZE);
-
-            close(new_sock_fd);
+            disconnect_client(new_sock_fd);
             continue;
         }
 
@@ -80,18 +77,17 @@ int main(int argc, char *argv[])
 
         menu_selection = get_menu_selection();
 
-        printf("%d\n", menu_selection);
-
-        while (1);
-
-        /* Receive message from new socket and store data in buffer. */
-        // if ((ret = recv(new_sock_fd, recv_buf, BUF_SIZE, NO_FLAGS)) == -1) {
-        //     perror("recv");
-        //     exit(EXIT_FAILURE);
-        // } else if (ret == 0) {
-        //     printf("Connection closed.\n");
-        //     break;
-        // }
+        switch (menu_selection) {
+            case PLAY_HANGMAN:
+                break;
+            case SHOW_LEADERBOARD:
+                break;
+            case QUIT:
+                /* Send message to client to disconnect. */
+                write(new_sock_fd, DISCONNECT_SIGNAL, BUF_SIZE);
+                close(new_sock_fd);
+                continue;
+        }
     }
 
     /* Close socket. */
@@ -201,10 +197,19 @@ int create_passive_socket(char *port, addrinfo *addr)
     return sock_fd;
 }
 
-void shutdown_server(int sig)
+void disconnect_client(int sock_fd)
 {
     /* Send message to client to disconnect. */
-    write(new_sock_fd, DISCONNECT_SIGNAL, BUF_SIZE);
+    if (write(sock_fd, DISCONNECT_SIGNAL, BUF_SIZE) == -1) {
+        perror("write");
+        exit(EXIT_FAILURE);
+    }
+    close(sock_fd);
+}
+
+void shutdown_server(int sig)
+{
+    disconnect_client(new_sock_fd);
 
     fflush(stdout);
 

@@ -37,3 +37,5 @@ static void *read_socket(void *data);
 int create_connection(char *host, char *port);
 
 int get_input(char *msg, char *input_str);
+
+void shutdown_client(int sig);
