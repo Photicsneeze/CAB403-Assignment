@@ -9,6 +9,9 @@
 #include "leaderboard.h"
 
 
+/*
+ * Summary: Get/display leaderboard
+ */
 void get_leaderboard(void){
   for(int i=0;i<LEADERBOARD_LENGTH;i++){
     if(user_scores[i].games_played==0){
@@ -28,6 +31,12 @@ void get_leaderboard(void){
 }
 
 
+/*
+ * Summary: Set/update leaderboard and then sort list
+ * Parameters:
+ *        string user : users login name
+ *        int win : whether the user won or not
+ */
 void set_leaderboard(char *user,int win){
   int user_pos = find_user(user);
   if(user_pos!= -1){ /* If user saved*/
@@ -55,9 +64,15 @@ void set_leaderboard(char *user,int win){
 }
 
 
-/* Searches through struct array for username by comparing strings
- * Search could be optimized to search by score first
- * and then search through by name
+/*
+ * Summary: Searches through struct array for username by comparing strings
+ *          Search could be optimized to search by score first
+ *          and then search through by name
+ * Parameters:
+ *        string user : users login name
+ *
+ * Return: index of user
+ *         or -1 if user not found
  *
  */
 int find_user(char *user){
@@ -69,18 +84,33 @@ int find_user(char *user){
   return -1;
 }
 
-/* Checks last value in array up to leaderboard length and sees if it's empty*/
+/*
+ * Summary: Checks last index on the leaderboard to see if empty
+ *          If last index is empty then leaderboard is not full
+ *
+ * Return: 0 if not full
+ *         or 1 if full
+ *
+ */
 int leaderboard_full(void){
-    if(strcmp("",user_scores[LEADERBOARD_LENGTH-1].username)==0){
+    if(user_scores[LEADERBOARD_LENGTH-1].games_played==0){
       return 0;
     }else{
       return 1;
     }
 }
 
-/* Checks last value in array up to users length and sees if it's empty*/
+
+/*
+ * Summary: Checks last index on the users array to see if empty
+ *          If last index is empty then users array is not full
+ *
+ * Return: 0 if not full
+ *         or 1 if full
+ *
+ */
 int users_full(void){
-    if(strcmp("",user_scores[MAX_SAVED_USERS-1].username)==0){
+    if(ser_scores[MAX_SAVED_USERS-1].games_played==0){
       return 0;
     }else{
       return 1;
@@ -88,7 +118,14 @@ int users_full(void){
 }
 
 
-
+/*
+ * Summary: Searches through array and returns the next free spot in list
+ *          By seeing if user is blank
+ *
+ * Return: i of next free spot index
+ *         or -1 if no free spots
+ *
+ */
 int next_user_slot(void){
   for(int i=0;i<MAX_SAVED_USERS;i++){
     if(strcmp("",user_scores[i].username)==0){

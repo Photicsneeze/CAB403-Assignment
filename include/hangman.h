@@ -6,7 +6,6 @@
 #define MAX_WORD_LENGTH 20
 
 typedef struct{
-    //char *user;
     int guess_count;
     int number_guesses;
     char word1[MAX_WORD_LENGTH];
@@ -28,14 +27,4 @@ void display_game(Game *game, char *str);
 
 void update_guess(Game *game, char guess);
 
-/* Summary:
- *    Simple check if game has been won.
- *
- * TODO:
- *    Could merge check for game loss in as well.
- *
- * Outputs:
- *    return 0 - if game hasnt ended
- *    return 1 - if game has been won
- */
 int check_complete(Game *game);

@@ -15,6 +15,14 @@
 
 #include "hangman.h"
 
+
+/*
+ * Summary: Calculate the number of guesses allowed for given word
+ *
+ * Parameters:
+ *        Game *game : game struct pointer
+ *
+ */
 void number_of_guesses(Game *game)
 {
     game->guess_count = 0;    /*Initialse guess_count [didnt like it in struct] */
@@ -23,11 +31,21 @@ void number_of_guesses(Game *game)
     }
 
     int formula = (strlen(game->word1) + strlen(game->word2) + 10);
-    
+
     game->number_guesses = (formula < 26) ? formula : 26;
 }
 
-/* flip words around, word 1 is word 2 and vice versa */
+
+
+/*
+ * Summary: Randomly choose given word
+ *          Also swap words around for proper displayment
+ *
+ * Parameters:
+ *        Game *game : game struct pointer
+ *        int number : Number of words in list to search through
+ *
+ */
 void choose_words(Game *game, int number)
 {
     char *word1 = game->word1;
@@ -63,6 +81,14 @@ void choose_words(Game *game, int number)
          }
 }
 
+
+/*
+ * Summary: Search through file to get number of words available.
+ *          Allowing the addition and subtraction of more words in the future
+ *
+ * Return: number of words available to use in game
+ *
+ */
 int get_number_words_available(void)
 {
     FILE *fr;
@@ -82,6 +108,14 @@ int get_number_words_available(void)
 }
 
 
+/*
+ * Summary: Send/Display game on client end
+ *
+ * Parameters:
+ *        Game *game : game struct pointer
+ *        char *str : the string that will be sent to client to be displayed
+ *
+ */
 void display_game(Game *game, char *str)
 {
     char temp[30] = {0};
@@ -118,6 +152,15 @@ void display_game(Game *game, char *str)
     strcat(str, "\n\nEnter your guess - ");
 }
 
+
+/*
+ * Summary: Update game with guess
+ *
+ * Parameters:
+ *        Game *game : game struct pointer
+ *        char guess : letter guessed in hangman game
+ *
+ */
 void update_guess(Game *game, char guess)
 {
     for(int i = 0; i < game->len_word1; i++) {
@@ -131,13 +174,13 @@ void update_guess(Game *game, char guess)
     }
 }
 
-/* Summary:
- *    Simple check if game has been won.
+/*
+ * Summary: Simple check if game has been won.
  *
  * TODO:
  *    Could merge check for game loss in as well.
  *
- * Outputs:
+ * Return:
  *    return 0 - if game hasnt ended
  *    return 1 - if game has been won
  */
