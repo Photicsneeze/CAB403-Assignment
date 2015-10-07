@@ -62,11 +62,12 @@ const char *MENU_PROMPT = "\nSelection option (1 - 3) --> ";
 typedef struct addrinfo addrinfo;
 
 /* ---- Global Variables ---- */
-static int sock_fd;        /* Initial socket descriptor */
-static int new_sock_fd;    /* Socket descriptor for new connection */
+static int  sock_fd;                      /* Initial socket descriptor */
+static int  new_sock_fd;                  /* Socket descriptor for new connection */
+static bool client_connected = false;
 
 /* ---- Function Declarations ---- */
-void play_hangman();
+void play_hangman(char *user);
 
 void get_username(char *username);
 

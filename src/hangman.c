@@ -17,110 +17,119 @@
 
 void number_of_guesses(Game *game)
 {
-  game->guess_count = 0;    /*Initialse guess_count [didnt like it in struct] */
-  for(int i=0;i<26;i++){
-    game->guesses_made[i] = '\0';
-  }
-  int formula = (strlen(game->word1)+strlen(game->word2)+10);
-  int n_guesses = (formula<26) ? formula: 26;
-  game->number_guesses = n_guesses;
+    game->guess_count = 0;    /*Initialse guess_count [didnt like it in struct] */
+    for (int i = 0; i < 26; i++){
+        game->guesses_made[i] = '\0';
+    }
+
+    int formula = (strlen(game->word1) + strlen(game->word2) + 10);
+    
+    game->number_guesses = (formula < 26) ? formula : 26;
 }
 
 /* flip words around, word 1 is word 2 and vice versa */
 void choose_words(Game *game, int number)
 {
-  char *word1 = game->word1;
-  char *word2= game->word2;
-  FILE *fr;
-  fr = fopen ("hangman_text.txt", "rt");
+    char *word1 = game->word1;
+    char *word2= game->word2;
+    FILE *fr;
+    fr = fopen ("bin/hangman_text.txt", "rt");
 
-  srand(time(NULL));
-  int words = rand() % number;
+    srand(time(NULL));
+    int words = rand() % number;
 
-    char line[80];
+        char line[80];
 
-    int count = 0;
-    while(fgets(line, 80, fr) != NULL)
-     {
-       if(count == words){
-         sscanf (line, "%[^,],%s", word1,word2);
-         break;
-       }else{
-         count++;
-       }
-     }
-     fclose(fr);  /* close the file prior to exiting the routine */
-     game->len_word1 = strlen(word1);
-     game->len_word2 = strlen(word2);
+        int count = 0;
+        while(fgets(line, 80, fr) != NULL)
+         {
+             if(count == words){
+                 sscanf (line, "%[^,],%s", word1,word2);
+                 break;
+             }else{
+                 count++;
+             }
+         }
+         fclose(fr);  /* close the file prior to exiting the routine */
+         game->len_word1 = strlen(word1);
+         game->len_word2 = strlen(word2);
 
-     for(int i=0;i<strlen(word1);i++){
-       game->guessed_word1_potion[i] = '_';
-     }
+         for(int i=0;i<strlen(word1);i++){
+             game->guessed_word1_potion[i] = '_';
+         }
 
-     for(int i=0;i<strlen(word2);i++){
-       game->guessed_word2_potion[i] = '_';
-     }
+         for(int i=0;i<strlen(word2);i++){
+             game->guessed_word2_potion[i] = '_';
+         }
 }
 
 int get_number_words_available(void)
 {
-  FILE *fr;
-  fr = fopen ("hangman_text.txt", "rt");
-  if(fr==NULL){
-    perror("Cannot Open File!\n");
-  }
-  char line[80];
-  int n_words = 0;
+    FILE *fr;
+    fr = fopen ("bin/hangman_text.txt", "rt");
+    if(fr==NULL){
+        perror("Cannot Open File!\n");
+    }
+    char line[80];
+    int n_words = 0;
 
-  while(fgets(line, 80, fr) != NULL)
-   {
-     n_words++;
-   }
-   fclose(fr);  /* close the file prior to exiting the routine */
-   return n_words;
+    while(fgets(line, 80, fr) != NULL)
+     {
+         n_words++;
+     }
+     fclose(fr);  /* close the file prior to exiting the routine */
+     return n_words;
 }
 
 
-void display_game(Game *game)
+void display_game(Game *game, char *str)
 {
-  printf("\n");
-  for(int i = 0; i<30;i++){
-    printf("-");
-  }
-  printf("\nGuessed letters: ");
-  for(int i=0;i<game->number_guesses;i++){
-    if(game->guesses_made[i]!='\0')
-    {
-      printf("%c",game->guesses_made[i]);
-    }else{
-      break;
+    char temp[30] = {0};
+
+    strcat(str, "\n");
+    for (int i = 0; i < 30; i++) {
+        strcat(str, "-");
     }
-  }
-  printf("\n\nNumber of guesses left: %d",((game->number_guesses)-(game->guess_count)));
-  printf("\n\nWord: ");
-  for(int i=0;i<game->len_word1;i++){
-    printf("%c ",game->guessed_word1_potion[i]);
-  }
-  printf("    ");
-  for(int i=0;i<game->len_word2;i++){
-    printf("%c ",game->guessed_word2_potion[i]);
-  }
-  printf("\n\nEnter your guess - ");
+
+    strcat(str, "\nGuessed letters: ");
+    for (int i = 0; i < game->number_guesses; i++) {
+        if (game->guesses_made[i] != '\0') {
+            sprintf(temp, "%c", game->guesses_made[i]);
+            strcat(str, temp);
+        } else {
+            break;
+        }
+    }
+
+    sprintf(temp, "\n\nNumber of guesses left: %d", ((game->number_guesses)-(game->guess_count)));
+    strcat(str, temp);
+
+    strcat(str, "\n\nWord: ");
+    for(int i = 0; i < game->len_word1; i++) {
+        sprintf(temp, "%c ", game->guessed_word1_potion[i]);
+        strcat(str, temp);
+    }
+
+    strcat(str, "    ");
+    for(int i = 0; i < game->len_word2; i++) {
+        sprintf(temp, "%c ", game->guessed_word2_potion[i]);
+        strcat(str, temp);
+    }
+    strcat(str, "\n\nEnter your guess - ");
 }
 
 void update_guess(Game *game, char guess)
 {
-  for(int i=0;i<game->len_word1;i++){
-    if(game->word1[i] == guess)
-        game->guessed_word1_potion[i] = guess;
-  }
+    for(int i = 0; i < game->len_word1; i++) {
+        if (game->word1[i] == guess)
+            game->guessed_word1_potion[i] = guess;
+    }
 
-  for(int i=0;i<(game->len_word2);i++){
-    if(game->word2[i] == guess)
-        game->guessed_word2_potion[i] = guess;
-  }
+    for(int i = 0; i < (game->len_word2); i++) {
+        if (game->word2[i] == guess)
+            game->guessed_word2_potion[i] = guess;
+    }
 }
-
 
 /* Summary:
  *    Simple check if game has been won.
@@ -134,19 +143,17 @@ void update_guess(Game *game, char guess)
  */
 int check_complete(Game *game)
 {
-  for(int i=0;i<game->len_word1;i++){
-    if(game->guessed_word1_potion[i] == '_')
-        return 0;
-  }
+    for(int i=0;i<game->len_word1;i++){
+        if(game->guessed_word1_potion[i] == '_')
+                return 0;
+    }
 
-  for(int i=0;i<(game->len_word2);i++){
-    if(game->guessed_word2_potion[i] == '_')
-        return 0;
-  }
-  return 1;
+    for(int i=0;i<(game->len_word2);i++){
+        if(game->guessed_word2_potion[i] == '_')
+                return 0;
+    }
+    return 1;
 }
-
-
 
 /*MAIN LOOP: testing purposes only*/
 // int main(int argc, char *argv[])

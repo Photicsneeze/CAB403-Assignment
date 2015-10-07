@@ -44,6 +44,7 @@ int main(int argc, char *argv[])
             perror("accept");
             continue; /* Failed to accept connection, continue to start on main loop. */
         }
+        client_connected = true;
         printf("Connection accepted.\n\n");
 
         /* Send welcome message. */
@@ -53,9 +54,10 @@ int main(int argc, char *argv[])
             exit(EXIT_FAILURE);
         }
 
-        get_username(username);
-
-        get_password(password);
+        // get_username(username);
+        // get_password(password);
+        strcpy(username, "Maolin");
+        strcpy(password, "111111");
 
         if (!authenticate(username, password)) {
             printf("Sending auth failed message...\n");
@@ -68,26 +70,26 @@ int main(int argc, char *argv[])
             continue;
         }
 
-        /* Send main menu. */
-        printf("Sending main menu...\n");
-        if (write(new_sock_fd, MAIN_MENU, BUF_SIZE) == -1) {
-            perror("write");
-            exit(EXIT_FAILURE);
-        }
+        while (client_connected) {
+            /* Send main menu. */
+            printf("Sending main menu...\n");
+            if (write(new_sock_fd, MAIN_MENU, BUF_SIZE) == -1) {
+                perror("write");
+                exit(EXIT_FAILURE);
+            }
 
-        menu_selection = get_menu_selection();
+            menu_selection = get_menu_selection();
 
-        switch (menu_selection) {
-            case PLAY_HANGMAN:
-                play_hangman();
-                break;
-            case SHOW_LEADERBOARD:
-                break;
-            case QUIT:
-                /* Send message to client to disconnect. */
-                write(new_sock_fd, DISCONNECT_SIGNAL, BUF_SIZE);
-                close(new_sock_fd);
-                continue;
+            switch (menu_selection) {
+                case PLAY_HANGMAN:
+                    play_hangman(username);
+                    break;
+                case SHOW_LEADERBOARD:
+                    break;
+                case QUIT:
+                    disconnect_client(new_sock_fd);
+                    break;
+            }
         }
     }
 
@@ -97,37 +99,60 @@ int main(int argc, char *argv[])
     exit(EXIT_SUCCESS);
 }
 
-void play_hangman() {
+void play_hangman(char *user) {
     Game game;
-    char guess;
+    char guess[2];                  /* Not sure why this had to be 2 char array. Breaks as a char. */
+    char game_interface[BUF_SIZE];
+    char game_over_message[BUF_SIZE];
 
-    // choose_words(&game, get_number_words_available());
-    // number_of_guesses(&game);
+    choose_words(&game, get_number_words_available());
+    number_of_guesses(&game);
 
-    // for(;;){
-    //   display_game(&game);
+    for (;;) {
+        memset(game_interface, 0, sizeof(game_interface)); /* Clear the interface from previous round. */
+        display_game(&game, game_interface);
+        printf("Sending game interface...\n");
+        if (write(new_sock_fd, game_interface, BUF_SIZE) == -1) {
+            perror("write");
+            exit(EXIT_FAILURE);
+        }
 
-    //   if(check_complete(&game)==1){
-    //     //Win
-    //     printf("\nGame Over\n\n\n");
-    //     printf("Well done *user*! You won this round of Hangman!\n");
-    //     break;
-    //   }
+        if (check_complete(&game)) { /* Win */
+            sprintf(game_over_message,
+                    "\n\nGame Over\nWell done %s! You won this round of Hangman!", user);
 
-    //   if(game.guess_count>=game.number_guesses){
-    //     //Game over
-    //     printf("\nGame Over\n\n\n");
-    //     printf("Bad luck *user*! You have run out of guesses. The Hangman got you!\n");
-    //     break;
-    //   }
+            printf("Sending win message...\n");
+            if (write(new_sock_fd, game_over_message, BUF_SIZE) == -1) {
+                perror("write");
+                exit(EXIT_FAILURE);
+            }
+            break;
+        }
 
-    //   scanf(" %c",&guess);
+        if (game.guess_count >= game.number_guesses) { /* Lose */
+            sprintf(game_over_message,
+                    "\n\nGame Over\nBad luck %s! You have run out of guesses. The Hangman got you!", user);
 
-    //   update_guess(&game,guess);
+            printf("Sending lose message...\n");
+            if (write(new_sock_fd, game_over_message, BUF_SIZE) == -1) {
+                perror("write");
+                exit(EXIT_FAILURE);
+            }
+            break;
+        }
 
-    //   game.guesses_made[game.guess_count] = guess;
-    //   game.guess_count++;
-    // }
+        printf("Waiting for guess from client...\n");
+        /* Have to receive 2 bytes otherwise it seems to read the enter key character on next loop. */
+        if (read(new_sock_fd, guess, 2) == -1) {
+            perror("recv");
+            exit(EXIT_FAILURE);
+        }
+
+        update_guess(&game, guess[0]);
+
+        game.guesses_made[game.guess_count] = guess[0];
+        game.guess_count++;
+    }
 }
 
 void get_username(char *username)
@@ -238,6 +263,8 @@ void disconnect_client(int sock_fd)
         perror("write");
         exit(EXIT_FAILURE);
     }
+
+    client_connected = false;
     close(sock_fd);
 }
 
@@ -246,6 +273,5 @@ void shutdown_server(int sig)
     disconnect_client(new_sock_fd);
 
     fflush(stdout);
-
     exit(EXIT_SUCCESS);
 }
