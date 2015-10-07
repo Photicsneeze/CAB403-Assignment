@@ -1,6 +1,6 @@
 
 all:
-	gcc -std=c99 -D_POSIX_SOURCE -pthread src/server.c src/authentication.c src/hangman.c -I./include -o bin/server
+	gcc -std=c99 -D_POSIX_SOURCE -pthread src/server.c src/authentication.c src/hangman.c src/leaderboard.c -I./include -o bin/server
 	gcc -std=c99 -D_POSIX_SOURCE -pthread src/client.c -I./include -o bin/client
 
 clientgdb:

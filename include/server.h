@@ -21,6 +21,7 @@
 
 #include "authentication.h"
 #include "hangman.h"
+#include "leaderboard.h"
 
 /* ---- Defines ---- */
 #define DEFAULT_PORT        "12345"
@@ -67,7 +68,9 @@ static int  new_sock_fd;                  /* Socket descriptor for new connectio
 static bool client_connected = false;
 
 /* ---- Function Declarations ---- */
-void play_hangman(char *user);
+void leaderboard(char *user);
+
+int play_hangman(char *user);
 
 void get_username(char *username);
 

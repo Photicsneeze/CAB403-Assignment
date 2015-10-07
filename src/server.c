@@ -70,6 +70,8 @@ int main(int argc, char *argv[])
             continue;
         }
 
+
+
         while (client_connected) {
             /* Send main menu. */
             printf("Sending main menu...\n");
@@ -81,10 +83,12 @@ int main(int argc, char *argv[])
             menu_selection = get_menu_selection();
 
             switch (menu_selection) {
-                case PLAY_HANGMAN:
-                    play_hangman(username);
+                case PLAY_HANGMAN:;
+                    int win = play_hangman(username);
+                    set_leaderboard(username,win);
                     break;
                 case SHOW_LEADERBOARD:
+                    get_leaderboard();
                     break;
                 case QUIT:
                     disconnect_client(new_sock_fd);
@@ -99,11 +103,13 @@ int main(int argc, char *argv[])
     exit(EXIT_SUCCESS);
 }
 
-void play_hangman(char *user) {
+
+int play_hangman(char *user) {
     Game game;
     char guess[2];                  /* Not sure why this had to be 2 char array. Breaks as a char. */
     char game_interface[BUF_SIZE];
     char game_over_message[BUF_SIZE];
+    int win = 0;
 
     choose_words(&game, get_number_words_available());
     number_of_guesses(&game);
@@ -118,6 +124,7 @@ void play_hangman(char *user) {
         }
 
         if (check_complete(&game)) { /* Win */
+            win = 1;
             sprintf(game_over_message,
                     "\n\nGame Over\nWell done %s! You won this round of Hangman!", user);
 
@@ -126,7 +133,7 @@ void play_hangman(char *user) {
                 perror("write");
                 exit(EXIT_FAILURE);
             }
-            break;
+            return win;
         }
 
         if (game.guess_count >= game.number_guesses) { /* Lose */
@@ -138,7 +145,7 @@ void play_hangman(char *user) {
                 perror("write");
                 exit(EXIT_FAILURE);
             }
-            break;
+            return win;
         }
 
         printf("Waiting for guess from client...\n");
@@ -236,7 +243,7 @@ int create_passive_socket(char *port, addrinfo *addr)
                 break; /* Bind succeded. */
             }
 
-            close(sock_fd); /* Bind failed for this address, so close. */   
+            close(sock_fd); /* Bind failed for this address, so close. */
         }
     }
 
