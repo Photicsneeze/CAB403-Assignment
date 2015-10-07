@@ -24,7 +24,7 @@ void choose_words(Game *game, int number);
 
 int get_number_words_available(void);
 
-void display_game(Game *game);
+void display_game(Game *game, char *str);
 
 void update_guess(Game *game, char guess);
 
