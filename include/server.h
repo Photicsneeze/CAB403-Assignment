@@ -20,6 +20,7 @@
 #include <unistd.h>         /* For close() */
 
 #include "authentication.h"
+#include "hangman.h"
 
 /* ---- Defines ---- */
 #define DEFAULT_PORT        "12345"
@@ -65,6 +66,8 @@ static int sock_fd;        /* Initial socket descriptor */
 static int new_sock_fd;    /* Socket descriptor for new connection */
 
 /* ---- Function Declarations ---- */
+void play_hangman();
+
 void get_username(char *username);
 
 void get_password(char *password);

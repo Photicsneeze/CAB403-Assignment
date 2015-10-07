@@ -9,34 +9,11 @@
  *
  *    TODO: Want to add in a server function for printing to client.
  *          Just because in testing i've used printf a lot.
- *         Name of function would be similar to "printf" (i.e "cprintf")
-*          For easy adapting.
+ *          Name of function would be similar to "printf" (i.e "cprintf")
+ *          For easy adapting.
  */
 
-
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
-
-#define MAX_WORD_LENGTH 20
-
-typedef struct{
-    //char *user;
-    int guess_count;
-    int number_guesses;
-    char word1[MAX_WORD_LENGTH];
-    char word2[MAX_WORD_LENGTH];
-    int len_word1;
-    int len_word2;
-    char guessed_word1_potion[MAX_WORD_LENGTH];
-    char guessed_word2_potion[MAX_WORD_LENGTH];
-    char guesses_made[26];
-}Game;
-
-
-
+#include "hangman.h"
 
 void number_of_guesses(Game *game)
 {
@@ -49,6 +26,7 @@ void number_of_guesses(Game *game)
   game->number_guesses = n_guesses;
 }
 
+/* flip words around, word 1 is word 2 and vice versa */
 void choose_words(Game *game, int number)
 {
   char *word1 = game->word1;
@@ -171,43 +149,40 @@ int check_complete(Game *game)
 
 
 /*MAIN LOOP: testing purposes only*/
-int main(int argc, char *argv[])
-{
-    Game game;
+// int main(int argc, char *argv[])
+// {
+//     Game game;
+//     char guess;
 
-    choose_words(&game, get_number_words_available());    /*flip words around, word 1 is word 2 and vice versa*/
-    number_of_guesses(&game);
+//     /* flip words around, word 1 is word 2 and vice versa */
+//     choose_words(&game, get_number_words_available());
 
+//     number_of_guesses(&game);
 
-    char guess;
+//     for(;;){
+//       display_game(&game);
 
-    for(;;){
+//       if(check_complete(&game)==1){
+//         //Win
+//         printf("\nGame Over\n\n\n");
+//         printf("Well done *user*! You won this round of Hangman!\n");
+//         break;
+//       }
 
-      display_game(&game);
+//       if(game.guess_count>=game.number_guesses){
+//         //Game over
+//         printf("\nGame Over\n\n\n");
+//         printf("Bad luck *user*! You have run out of guesses. The Hangman got you!\n");
+//         break;
+//       }
 
-      if(check_complete(&game)==1){
-        //Win
-        printf("\nGame Over\n\n\n");
-        printf("Well done *user*! You won this round of Hangman!\n");
-        break;
-      }
+//       scanf(" %c",&guess);
 
-      if(game.guess_count>=game.number_guesses){
-        //Game over
-        printf("\nGame Over\n\n\n");
-        printf("Bad luck *user*! You have run out of guesses. The Hangman got you!\n");
-        break;
-      }
+//       update_guess(&game,guess);
 
-      scanf(" %c",&guess);
+//       game.guesses_made[game.guess_count] = guess;
+//       game.guess_count++;
+//     }
 
-      update_guess(&game,guess);
-
-      game.guesses_made[game.guess_count] = guess;
-      game.guess_count++;
-
-
-    }
-
-    //printf("Word 1:%s, Word2:%s\n",game.word1,game.word2);
-}
+//     //printf("Word 1:%s, Word2:%s\n",game.word1,game.word2);
+// }
