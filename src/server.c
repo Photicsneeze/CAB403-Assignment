@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
     if (argc < 2) {
         printf("No port provided. Using default port %s.\n", DEFAULT_PORT);
         port = DEFAULT_PORT;
-    } else if (argc == 2) {
+    } else if (argc == 2) { /* FIX THIS! */
         port = argv[1];
     } else {
         printf("Usage: %s <port>\n", argv[0]);
@@ -79,6 +79,7 @@ int main(int argc, char *argv[])
 
         switch (menu_selection) {
             case PLAY_HANGMAN:
+                play_hangman();
                 break;
             case SHOW_LEADERBOARD:
                 break;
@@ -94,6 +95,39 @@ int main(int argc, char *argv[])
     close(sock_fd);
 
     exit(EXIT_SUCCESS);
+}
+
+void play_hangman() {
+    Game game;
+    char guess;
+
+    // choose_words(&game, get_number_words_available());
+    // number_of_guesses(&game);
+
+    // for(;;){
+    //   display_game(&game);
+
+    //   if(check_complete(&game)==1){
+    //     //Win
+    //     printf("\nGame Over\n\n\n");
+    //     printf("Well done *user*! You won this round of Hangman!\n");
+    //     break;
+    //   }
+
+    //   if(game.guess_count>=game.number_guesses){
+    //     //Game over
+    //     printf("\nGame Over\n\n\n");
+    //     printf("Bad luck *user*! You have run out of guesses. The Hangman got you!\n");
+    //     break;
+    //   }
+
+    //   scanf(" %c",&guess);
+
+    //   update_guess(&game,guess);
+
+    //   game.guesses_made[game.guess_count] = guess;
+    //   game.guess_count++;
+    // }
 }
 
 void get_username(char *username)
