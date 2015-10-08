@@ -21,10 +21,15 @@ typedef struct {
     int games_won;
 } Score;
 
+typedef struct {
+    Score data;
+    Score *next;
+} List;
+
 /* Could use linked list, might be better for re-sorting*/
 Score user_scores[LEADERBOARD_LENGTH];
 
-void get_leaderboard(char *str);
+void get_leaderboard(char *str, int index);
 
 void set_leaderboard(char *user,int win);
 

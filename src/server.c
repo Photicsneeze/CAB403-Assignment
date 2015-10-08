@@ -51,10 +51,10 @@ int main(int argc, char *argv[])
         printf("Sending welcome message...\n");
         write_to_client(new_sock_fd, WELCOME_MESSAGE);
 
-        // get_username(username);
-        // get_password(password);
-        strcpy(username, "Maolin");
-        strcpy(password, "111111");
+        get_username(username);
+        get_password(password);
+        //strcpy(username, "Maolin");
+        //strcpy(password, "111111");
 
         if (!authenticate(username, password)) {
             printf("Sending auth failed message...\n");
@@ -142,12 +142,14 @@ int play_hangman(char *user) {
 }
 
 void send_leaderboard() {
-    char leaderboard[BUF_SIZE] = {0};
+    for(int i=0;i<LEADERBOARD_LENGTH;i++){
+        char leaderboard[BUF_SIZE] = {0};
 
-    get_leaderboard(leaderboard);
+        get_leaderboard(leaderboard,i);
 
-    printf("Sending leaderboard...\n");
-    write_to_client(new_sock_fd, leaderboard);
+        printf("Sending leaderboard...\n");
+        write_to_client(new_sock_fd, leaderboard);
+    }
 }
 
 void get_username(char *username)

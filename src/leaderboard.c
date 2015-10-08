@@ -9,7 +9,7 @@
 /*
  * Summary: Get/display leaderboard
  */
-void get_leaderboard(char *str)
+void get_leaderboard(char *str, int index)
 {
     char temp[100] = {0};
 
@@ -19,10 +19,10 @@ void get_leaderboard(char *str)
             strcat(str, "\nThere is no information currently stored in the Leader Board. Try again later.\n");
             strcat(str, "\n==============================================================================\n");
     } else {
-        for (int i = 0; i < LEADERBOARD_LENGTH; i++) {
+        if(user_scores[index].games_played != 0){
             strcat(str, "\n==================================================\n\n");
             sprintf(temp, "Player  - %s\nNumber of games won  - %d\nNumber of games played  - %d\n",
-                    user_scores[i].username, user_scores[i].games_won, user_scores[i].games_played);
+                    user_scores[index].username, user_scores[index].games_won, user_scores[index].games_played);
             strcat(str, temp);
             strcat(str, "\n==================================================\n");
         }
