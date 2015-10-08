@@ -13,14 +13,13 @@ void get_leaderboard(char *str)
 {
     char temp[100] = {0};
 
-    for (int i = 0; i < LEADERBOARD_LENGTH; i++) {
-        if (user_scores[i].games_played == 0 && i == 0) {
+    if (user_scores[0].games_played == 0) {
             /* First element is empty, then no information in leaderboard. */
-            strcat(str, "\n=============================================================================\n");
-            strcat(str, "\nThere is no information currently stored in the Leader Board. Try again later\n");
-            strcat(str, "\n=============================================================================\n");
-            return;
-        } else {
+            strcat(str, "\n==============================================================================\n");
+            strcat(str, "\nThere is no information currently stored in the Leader Board. Try again later.\n");
+            strcat(str, "\n==============================================================================\n");
+    } else {
+        for (int i = 0; i < LEADERBOARD_LENGTH; i++) {
             strcat(str, "\n==================================================\n\n");
             sprintf(temp, "Player  - %s\nNumber of games won  - %d\nNumber of games played  - %d\n",
                     user_scores[i].username, user_scores[i].games_won, user_scores[i].games_played);

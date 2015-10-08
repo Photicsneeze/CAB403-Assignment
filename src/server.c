@@ -129,7 +129,7 @@ int play_hangman(char *user) {
 
         printf("Waiting for guess from client...\n");
         /* Have to receive 2 bytes otherwise it seems to read the enter key character on next loop. */
-        if (read(new_sock_fd, guess, 2) == -1) {
+        if (read(new_sock_fd, guess, BUF_SIZE) == -1) {
             perror("read");
             exit(EXIT_FAILURE);
         }
