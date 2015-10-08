@@ -8,7 +8,6 @@
 
 #include "leaderboard.h"
 
-
 /*
  * Summary: Get/display leaderboard
  */
@@ -110,7 +109,7 @@ int leaderboard_full(void){
  *
  */
 int users_full(void){
-    if(ser_scores[MAX_SAVED_USERS-1].games_played==0){
+    if(user_scores[MAX_SAVED_USERS-1].games_played==0){
       return 0;
     }else{
       return 1;

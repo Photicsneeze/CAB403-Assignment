@@ -6,7 +6,6 @@
  *
  */
 
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -16,15 +15,14 @@
 #define MAX_SAVED_USERS 10
 #define USERNAME_BUFFER 25
 
-typedef struct{
+typedef struct {
     char username[USERNAME_BUFFER];
     int games_played;
     int games_won;
-}Score;
+} Score;
 
 /* Could use linked list, might be better for re-sorting*/
 Score user_scores[LEADERBOARD_LENGTH];
-
 
 void get_leaderboard(void);
 
