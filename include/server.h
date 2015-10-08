@@ -34,7 +34,7 @@
 #define QUIT                3
 
 /* ---- Menu Graphics ---- */
-const char *WELCOME_MESSAGE = "\n"
+const char WELCOME_MESSAGE[] = "\n"
                               "=============================================\n"
                               "\n"
                               " Welcome to the Online Hangman Gaming System\n"
@@ -42,14 +42,14 @@ const char *WELCOME_MESSAGE = "\n"
                               "=============================================\n"
                               "\n";
 
-const char *LOGIN_PROMPT = "You are required to logon with your username and password:\n";
+const char LOGIN_PROMPT[] = "You are required to logon with your username and password:\n";
 
-const char *USERNAME_PROMPT = "\nPlease enter your username --> ";
-const char *PASSWORD_PROMPT = "\nPlease enter your password --> ";
+const char USERNAME_PROMPT[] = "\nPlease enter your username --> ";
+const char PASSWORD_PROMPT[] = "\nPlease enter your password --> ";
 
-const char *AUTH_FAILED = "\nYou entered either an incorrect username or password - disconnecting...\n";
+const char AUTH_FAILED[] = "\nYou entered either an incorrect username or password - disconnecting...\n";
 
-const char *MAIN_MENU = "\n"
+const char MAIN_MENU[] = "\n"
                         "\n"
                         "===== Main Manu =====\n"
                         "\n"
@@ -57,7 +57,7 @@ const char *MAIN_MENU = "\n"
                         "<2> Show Leaderboard\n"
                         "<3> Quit\n";
 
-const char *MENU_PROMPT = "\nSelection option (1 - 3) --> ";
+const char MENU_PROMPT[] = "\nSelection option (1 - 3) --> ";
 
 /* typedef to remove need for struct keyword. */
 typedef struct addrinfo addrinfo;
@@ -77,6 +77,8 @@ void get_username(char *username);
 void get_password(char *password);
 
 int get_menu_selection();
+
+void write_to_client(int sock_fd, const char *message);
 
 int create_passive_socket(char *port, addrinfo *addr);
 

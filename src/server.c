@@ -49,10 +49,7 @@ int main(int argc, char *argv[])
 
         /* Send welcome message. */
         printf("Sending welcome message...\n");
-        if (write(new_sock_fd, WELCOME_MESSAGE, BUF_SIZE) == -1) {
-            perror("write");
-            exit(EXIT_FAILURE);
-        }
+        write_to_client(new_sock_fd, WELCOME_MESSAGE);
 
         // get_username(username);
         // get_password(password);
@@ -61,31 +58,22 @@ int main(int argc, char *argv[])
 
         if (!authenticate(username, password)) {
             printf("Sending auth failed message...\n");
-            if (write(new_sock_fd, AUTH_FAILED, BUF_SIZE) == -1) {
-                perror("write");
-                exit(EXIT_FAILURE);
-            }
+            write_to_client(new_sock_fd, AUTH_FAILED);
 
             disconnect_client(new_sock_fd);
             continue;
         }
 
-
-
         while (client_connected) {
-            /* Send main menu. */
             printf("Sending main menu...\n");
-            if (write(new_sock_fd, MAIN_MENU, BUF_SIZE) == -1) {
-                perror("write");
-                exit(EXIT_FAILURE);
-            }
+            write_to_client(new_sock_fd, MAIN_MENU);
 
             menu_selection = get_menu_selection();
 
             switch (menu_selection) {
                 case PLAY_HANGMAN:;
                     int win = play_hangman(username);
-                    set_leaderboard(username,win);
+                    set_leaderboard(username, win);
                     break;
                 case SHOW_LEADERBOARD:
                     send_leaderboard();
@@ -118,10 +106,7 @@ int play_hangman(char *user) {
         memset(game_interface, 0, sizeof(game_interface)); /* Clear the interface from previous round. */
         display_game(&game, game_interface);
         printf("Sending game interface...\n");
-        if (write(new_sock_fd, game_interface, BUF_SIZE) == -1) {
-            perror("write");
-            exit(EXIT_FAILURE);
-        }
+        write_to_client(new_sock_fd, game_interface);
 
         if (check_complete(&game)) { /* Win */
             win = 1;
@@ -129,10 +114,7 @@ int play_hangman(char *user) {
                     "\n\nGame Over\nWell done %s! You won this round of Hangman!", user);
 
             printf("Sending win message...\n");
-            if (write(new_sock_fd, game_over_message, BUF_SIZE) == -1) {
-                perror("write");
-                exit(EXIT_FAILURE);
-            }
+            write_to_client(new_sock_fd, game_over_message);
             return win;
         }
 
@@ -141,17 +123,14 @@ int play_hangman(char *user) {
                     "\n\nGame Over\nBad luck %s! You have run out of guesses. The Hangman got you!", user);
 
             printf("Sending lose message...\n");
-            if (write(new_sock_fd, game_over_message, BUF_SIZE) == -1) {
-                perror("write");
-                exit(EXIT_FAILURE);
-            }
+            write_to_client(new_sock_fd, game_over_message);
             return win;
         }
 
         printf("Waiting for guess from client...\n");
         /* Have to receive 2 bytes otherwise it seems to read the enter key character on next loop. */
         if (read(new_sock_fd, guess, 2) == -1) {
-            perror("recv");
+            perror("read");
             exit(EXIT_FAILURE);
         }
 
@@ -165,23 +144,18 @@ int play_hangman(char *user) {
 void send_leaderboard() {
     char leaderboard[BUF_SIZE] = {0};
 
-    //memset(leaderboard, 0, sizeof(leaderboard));
     get_leaderboard(leaderboard);
+
     printf("Sending leaderboard...\n");
-    if (write(new_sock_fd, leaderboard, BUF_SIZE) == -1) {
-        perror("write");
-        exit(EXIT_FAILURE);
-    }
+    write_to_client(new_sock_fd, leaderboard);
 }
 
 void get_username(char *username)
 {
     /* Prompt for username. */
     printf("Sending username prompt...\n");
-    if (write(new_sock_fd, USERNAME_PROMPT, BUF_SIZE) == -1) {
-        perror("write");
-        exit(EXIT_FAILURE);
-    }
+    write_to_client(new_sock_fd, USERNAME_PROMPT);
+
     printf("Waiting for username from client...\n");
     if (read(new_sock_fd, username, BUF_SIZE) == -1) {
         perror("read");
@@ -194,10 +168,8 @@ void get_password(char *password)
 {
     /* Prompt for password. */
     printf("Sending password prompt...\n");
-    if (write(new_sock_fd, PASSWORD_PROMPT, BUF_SIZE) == -1) {
-        perror("write");
-        exit(EXIT_FAILURE);
-    }
+    write_to_client(new_sock_fd, PASSWORD_PROMPT);
+
     printf("Waiting for password from client...\n");
     if (read(new_sock_fd, password, BUF_SIZE) == -1) {
         perror("read");
@@ -208,14 +180,12 @@ void get_password(char *password)
 
 int get_menu_selection()
 {
-    char *selection_str;
+    char selection_str[BUF_SIZE];
 
     /* Prompt for main menu. */
     printf("Sending menu selection prompt...\n");
-    if (write(new_sock_fd, MENU_PROMPT, BUF_SIZE) == -1) {
-        perror("write");
-        exit(EXIT_FAILURE);
-    }
+    write_to_client(new_sock_fd, MENU_PROMPT);
+
     printf("Waiting for menu selection from client...\n");
     if (read(new_sock_fd, selection_str, BUF_SIZE) == -1) {
         perror("read");
@@ -224,6 +194,15 @@ int get_menu_selection()
     printf("Menu selection received.\n");
 
     return atoi(selection_str); /* Convert string to int. */
+}
+
+void write_to_client(int sock_fd, const char *message)
+{
+    // if (write(sock_fd, message, strlen(message)) == -1) {
+    if (write(sock_fd, message, BUF_SIZE) == -1) {
+        perror("write");
+        exit(EXIT_FAILURE);
+    }
 }
 
 /* Function to create socket, bind it and mark it to accept incoming connections. */
@@ -277,11 +256,8 @@ int create_passive_socket(char *port, addrinfo *addr)
 
 void disconnect_client(int sock_fd)
 {
-    /* Send message to client to disconnect. */
-    if (write(sock_fd, DISCONNECT_SIGNAL, BUF_SIZE) == -1) {
-        perror("write");
-        exit(EXIT_FAILURE);
-    }
+    printf("Sending disconnect signal...\n");
+    write(sock_fd, DISCONNECT_SIGNAL, BUF_SIZE);
 
     client_connected = false;
     close(sock_fd);
@@ -290,7 +266,5 @@ void disconnect_client(int sock_fd)
 void shutdown_server(int sig)
 {
     disconnect_client(new_sock_fd);
-
-    fflush(stdout);
     exit(EXIT_SUCCESS);
 }
