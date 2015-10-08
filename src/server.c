@@ -88,7 +88,7 @@ int main(int argc, char *argv[])
                     set_leaderboard(username,win);
                     break;
                 case SHOW_LEADERBOARD:
-                    get_leaderboard();
+                    send_leaderboard();
                     break;
                 case QUIT:
                     disconnect_client(new_sock_fd);
@@ -159,6 +159,18 @@ int play_hangman(char *user) {
 
         game.guesses_made[game.guess_count] = guess[0];
         game.guess_count++;
+    }
+}
+
+void send_leaderboard() {
+    char leaderboard[BUF_SIZE] = {0};
+
+    //memset(leaderboard, 0, sizeof(leaderboard));
+    get_leaderboard(leaderboard);
+    printf("Sending leaderboard...\n");
+    if (write(new_sock_fd, leaderboard, BUF_SIZE) == -1) {
+        perror("write");
+        exit(EXIT_FAILURE);
     }
 }
 

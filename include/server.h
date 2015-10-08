@@ -68,9 +68,9 @@ static int  new_sock_fd;                  /* Socket descriptor for new connectio
 static bool client_connected = false;
 
 /* ---- Function Declarations ---- */
-void leaderboard(char *user);
-
 int play_hangman(char *user);
+
+void send_leaderboard();
 
 void get_username(char *username);
 

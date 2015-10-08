@@ -24,7 +24,7 @@ typedef struct {
 /* Could use linked list, might be better for re-sorting*/
 Score user_scores[LEADERBOARD_LENGTH];
 
-void get_leaderboard(void);
+void get_leaderboard(char *str);
 
 void set_leaderboard(char *user,int win);
 

@@ -118,7 +118,7 @@ int get_number_words_available(void)
  */
 void display_game(Game *game, char *str)
 {
-    char temp[30] = {0};
+    char temp[50] = {0};
 
     strcat(str, "\n");
     for (int i = 0; i < 30; i++) {
