@@ -18,6 +18,7 @@ int main(int argc, char *argv[])
     char        username[8];
     char        password[6];
     int         menu_selection;
+    Leaderboard leaderboard;
 
     /* Check the user provided the correct arguments. If no port provided, use default. */
     if (argc < 2) {
@@ -72,8 +73,9 @@ int main(int argc, char *argv[])
 
             switch (menu_selection) {
                 case PLAY_HANGMAN:;
-                    int win = play_hangman(username);
-                    set_leaderboard(username, win);
+                    bool win = play_hangman(username);
+                    //set_leaderboard(username, win);
+                    //update_score(&leaderboard, username, win);
                     break;
                 case SHOW_LEADERBOARD:
                     send_leaderboard();
@@ -92,12 +94,12 @@ int main(int argc, char *argv[])
 }
 
 
-int play_hangman(char *user) {
+bool play_hangman(char *user) {
     Game game;
     char guess[2];                  /* Not sure why this had to be 2 char array. Breaks as a char. */
     char game_interface[BUF_SIZE];
     char game_over_message[BUF_SIZE];
-    int win = 0;
+    bool win = false;
 
     choose_words(&game, get_number_words_available());
     number_of_guesses(&game);
@@ -109,7 +111,7 @@ int play_hangman(char *user) {
         write_to_client(new_sock_fd, game_interface);
 
         if (check_complete(&game)) { /* Win */
-            win = 1;
+            win = true;
             sprintf(game_over_message,
                     "\n\nGame Over\nWell done %s! You won this round of Hangman!", user);
 
@@ -142,14 +144,16 @@ int play_hangman(char *user) {
 }
 
 void send_leaderboard() {
-    for(int i=0;i<LEADERBOARD_LENGTH;i++){
-        char leaderboard[BUF_SIZE] = {0};
+    char leaderboard[BUF_SIZE] = {0};
 
-        get_leaderboard(leaderboard,i);
+    // for(int i = 0; i < LEADERBOARD_LENGTH; i++) {
+    //     memset(leaderboard, 0, sizeof(leaderboard)); /* Clear previous leaderboard entry. */
 
-        printf("Sending leaderboard...\n");
-        write_to_client(new_sock_fd, leaderboard);
-    }
+    //     //get_leaderboard(leaderboard,i);
+
+    //     printf("Sending leaderboard...\n");
+    //     write_to_client(new_sock_fd, leaderboard);
+    // }
 }
 
 void get_username(char *username)
