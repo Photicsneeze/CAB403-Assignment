@@ -35,6 +35,8 @@ int main(int argc, char *argv[])
 
     sock_fd = create_passive_socket(port, addr);
 
+    //leaderboard = create_leaderboard();
+
     /* Main server loop. Accept incomming connections, send/recv data, close connection. */
     for (;;) {
         /* Accept a new connection, returns a new socket_descriptor, leaving original in listening state.
@@ -75,7 +77,7 @@ int main(int argc, char *argv[])
                 case PLAY_HANGMAN:;
                     bool win = play_hangman(username);
                     //set_leaderboard(username, win);
-                    //update_score(&leaderboard, username, win);
+                    //update_score(leaderboard, username, win);
                     break;
                 case SHOW_LEADERBOARD:
                     send_leaderboard();

@@ -11,8 +11,8 @@ Leaderboard* create_leaderboard()
 	//leaderboard->first = NULL;
 	//leaderboard->last = NULL;
 	leaderboard->size = 0;
-
-	return leaderboard;
+    
+    return leaderboard;
 }
 
 void delete_leaderboard(Leaderboard *leaderboard)
@@ -59,6 +59,8 @@ Score* add_user(Leaderboard *leaderboard, char *username)
 	}
 
 	leaderboard->size++;
+    
+    return new_score;
 
 	// previous_score = leaderboard->first;
 	// current_score = previous_score->next;
