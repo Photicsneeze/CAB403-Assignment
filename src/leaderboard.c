@@ -8,6 +8,8 @@ Leaderboard* create_leaderboard()
 		exit(EXIT_FAILURE);
 	}
 	
+	leaderboard->first = NULL;
+	leaderboard->last = NULL;
 	leaderboard->size = 0;
     
     return leaderboard;
@@ -74,6 +76,7 @@ Score* add_user(Leaderboard *leaderboard, char *username)
 	if (leaderboard->first == NULL) { 		/* Leaderboard is empty. */
 		leaderboard->first = new_score;
 		leaderboard->last = new_score;
+		new_score->next = NULL;
 	} else {								/* Add new user to start of list */
 		new_score->next = leaderboard->first;
 		leaderboard->first = new_score;

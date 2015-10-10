@@ -56,8 +56,8 @@ int main(int argc, char *argv[])
 
         get_username(username);
         get_password(password);
-        //strcpy(username, "Maolin");
-        //strcpy(password, "111111");
+        // strcpy(username, "Maolin");
+        // strcpy(password, "111111");
 
         if (!authenticate(username, password)) {
             printf("Sending auth failed message...\n");
@@ -68,19 +68,20 @@ int main(int argc, char *argv[])
         }
 
         while (client_connected) {
+            bool win;
+
             printf("Sending main menu...\n");
             write_to_client(new_sock_fd, MAIN_MENU);
 
             menu_selection = get_menu_selection();
 
             switch (menu_selection) {
-                case PLAY_HANGMAN:;
-                    bool win = play_hangman(username);
-                    //set_leaderboard(username, win);
-                    //update_score(leaderboard, username, win);
+                case PLAY_HANGMAN:
+                    win = play_hangman(username);
+                    update_score(leaderboard, username, win);
                     break;
                 case SHOW_LEADERBOARD:
-                    send_leaderboard();
+                    send_leaderboard(leaderboard);
                     break;
                 case QUIT:
                     disconnect_client(new_sock_fd);
@@ -104,6 +105,7 @@ bool play_hangman(char *user) {
     bool win = false;
 
     choose_words(&game, get_number_words_available());
+
     number_of_guesses(&game);
 
     for (;;) {
@@ -145,17 +147,17 @@ bool play_hangman(char *user) {
     }
 }
 
-void send_leaderboard() {
-    char score_str[BUF_SIZE] = {0};
+void send_leaderboard(Leaderboard *leaderboard) {
+    char score_string[256];
+    Score *current_score = leaderboard->first;
 
-    // for(int i = 0; i < LEADERBOARD_LENGTH; i++) {
-    //     memset(score_str, 0, sizeof(score_str)); /* Clear previous leaderboard entry. */
+    while (current_score != NULL) {
+        memset(score_string, 0, 256);
+        score_to_string(score_string, current_score);
+        write_to_client(new_sock_fd, score_string);
 
-    //     //get_leaderboard(score_str,i);
-
-    //     printf("Sending leaderboard...\n");
-    //     write_to_client(new_sock_fd, score_str);
-    // }
+        current_score = current_score->next;
+    }
 }
 
 void get_username(char *username)
@@ -188,7 +190,7 @@ void get_password(char *password)
 
 int get_menu_selection()
 {
-    char selection_str[BUF_SIZE];
+    char selection_str[BUF_SIZE] = {0};
 
     /* Prompt for main menu. */
     printf("Sending menu selection prompt...\n");

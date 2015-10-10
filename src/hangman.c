@@ -49,36 +49,41 @@ void number_of_guesses(Game *game)
 void choose_words(Game *game, int number)
 {
     char *word1 = game->word1;
-    char *word2= game->word2;
+    char *word2 = game->word2;
     FILE *fr;
-    fr = fopen ("bin/hangman_text.txt", "rt");
+    char line[80];
 
-    srand(time(NULL));
+    fr = fopen("bin/hangman_text.txt", "rt");
+    if (fr == NULL) {
+        perror("Cannot Open File!\n");
+    }
+
+    //srand(time(NULL));
+
     int words = rand() % number;
 
-        char line[80];
+    int count = 0;
+    while (fgets(line, 80, fr) != NULL) {
+        if (count == words) {
+            sscanf(line, "%[^,],%s", word1, word2);
+            break;
+        } else {
+            count++;
+        }
+    }
 
-        int count = 0;
-        while(fgets(line, 80, fr) != NULL)
-         {
-             if(count == words){
-                 sscanf (line, "%[^,],%s", word1,word2);
-                 break;
-             }else{
-                 count++;
-             }
-         }
-         fclose(fr);  /* close the file prior to exiting the routine */
-         game->len_word1 = strlen(word1);
-         game->len_word2 = strlen(word2);
+    fclose(fr);  /* close the file prior to exiting the routine */
 
-         for(int i=0;i<strlen(word1);i++){
-             game->guessed_word1_potion[i] = '_';
-         }
+    game->len_word1 = strlen(word1);
+    game->len_word2 = strlen(word2);
 
-         for(int i=0;i<strlen(word2);i++){
-             game->guessed_word2_potion[i] = '_';
-         }
+    for(int i = 0; i < strlen(word1); i++) {
+        game->guessed_word1_potion[i] = '_';
+    }
+
+    for(int i = 0; i < strlen(word2); i++) {
+        game->guessed_word2_potion[i] = '_';
+    }
 }
 
 
@@ -92,19 +97,20 @@ void choose_words(Game *game, int number)
 int get_number_words_available(void)
 {
     FILE *fr;
-    fr = fopen ("bin/hangman_text.txt", "rt");
-    if(fr==NULL){
-        perror("Cannot Open File!\n");
-    }
     char line[80];
     int n_words = 0;
 
-    while(fgets(line, 80, fr) != NULL)
-     {
+    fr = fopen("bin/hangman_text.txt", "rt");
+    if (fr == NULL) {
+        perror("Cannot Open File!\n");
+    }
+
+    while (fgets(line, 80, fr) != NULL) {
          n_words++;
-     }
-     fclose(fr);  /* close the file prior to exiting the routine */
-     return n_words;
+    }
+
+    fclose(fr);  /* close the file prior to exiting the routine */
+    return n_words;
 }
 
 

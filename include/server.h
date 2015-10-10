@@ -70,7 +70,7 @@ static bool client_connected = false;
 /* ---- Function Declarations ---- */
 bool play_hangman(char *user);
 
-void send_leaderboard();
+void send_leaderboard(Leaderboard *leaderboard);
 
 void get_username(char *username);
 
