@@ -1,6 +1,4 @@
 #include <stdlib.h>
-#include <errno.h>
-#include <stdlib.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
@@ -24,6 +22,8 @@ Leaderboard* create_leaderboard();
 
 void delete_leaderboard(Leaderboard *leaderboard);
 
+void sort_leaderboard(Leaderboard *leaderboard);
+
 void update_score(Leaderboard *leaderboard, char *username, bool win);
 
 struct Score* add_user(Leaderboard *leaderboard, char *username);
@@ -31,3 +31,7 @@ struct Score* add_user(Leaderboard *leaderboard, char *username);
 struct Score* get_score(Leaderboard *leaderboard, char *username);
 
 bool contains_user(Leaderboard *leaderboard, char *username);
+
+void print_leaderboard(Leaderboard *leaderboard);
+
+void score_to_string(char *str, Score *score);

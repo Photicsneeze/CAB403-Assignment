@@ -206,7 +206,6 @@ int get_menu_selection()
 
 void write_to_client(int sock_fd, const char *message)
 {
-    // if (write(sock_fd, message, strlen(message)) == -1) {
     if (write(sock_fd, message, BUF_SIZE) == -1) {
         perror("write");
         exit(EXIT_FAILURE);
