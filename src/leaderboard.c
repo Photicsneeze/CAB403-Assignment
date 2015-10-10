@@ -7,9 +7,7 @@ Leaderboard* create_leaderboard()
 		printf("Failed to allocate memory for leaderboard.\n");
 		exit(EXIT_FAILURE);
 	}
-
-	//leaderboard->first = NULL;
-	//leaderboard->last = NULL;
+	
 	leaderboard->size = 0;
     
     return leaderboard;

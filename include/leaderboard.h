@@ -7,16 +7,14 @@
 
 #define USERNAME_LENGTH	8
 
-typedef struct Score Score;
-
-struct Score {
+typedef struct Score {
 	char username[USERNAME_LENGTH];
 	int games_played;
 	int games_won;
-	Score *next;
-};
+	struct Score *next;
+} Score;
 
-typedef struct {
+typedef struct Leaderboard {
 	Score *first;
 	Score *last;
 	int size;
@@ -28,8 +26,8 @@ void delete_leaderboard(Leaderboard *leaderboard);
 
 void update_score(Leaderboard *leaderboard, char *username, bool win);
 
-Score* add_user(Leaderboard *leaderboard, char *username);
+struct Score* add_user(Leaderboard *leaderboard, char *username);
 
-Score* get_score(Leaderboard *leaderboard, char *username);
+struct Score* get_score(Leaderboard *leaderboard, char *username);
 
 bool contains_user(Leaderboard *leaderboard, char *username);

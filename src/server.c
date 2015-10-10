@@ -18,7 +18,7 @@ int main(int argc, char *argv[])
     char        username[8];
     char        password[6];
     int         menu_selection;
-    Leaderboard leaderboard;
+    Leaderboard *leaderboard;
 
     /* Check the user provided the correct arguments. If no port provided, use default. */
     if (argc < 2) {
@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
 
     sock_fd = create_passive_socket(port, addr);
 
-    //leaderboard = create_leaderboard();
+    leaderboard = create_leaderboard();
 
     /* Main server loop. Accept incomming connections, send/recv data, close connection. */
     for (;;) {
@@ -146,15 +146,15 @@ bool play_hangman(char *user) {
 }
 
 void send_leaderboard() {
-    char leaderboard[BUF_SIZE] = {0};
+    char score_str[BUF_SIZE] = {0};
 
     // for(int i = 0; i < LEADERBOARD_LENGTH; i++) {
-    //     memset(leaderboard, 0, sizeof(leaderboard)); /* Clear previous leaderboard entry. */
+    //     memset(score_str, 0, sizeof(score_str)); /* Clear previous leaderboard entry. */
 
-    //     //get_leaderboard(leaderboard,i);
+    //     //get_leaderboard(score_str,i);
 
     //     printf("Sending leaderboard...\n");
-    //     write_to_client(new_sock_fd, leaderboard);
+    //     write_to_client(new_sock_fd, score_str);
     // }
 }
 
