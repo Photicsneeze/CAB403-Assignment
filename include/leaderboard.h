@@ -6,14 +6,15 @@
  *
  */
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
 
-#define LEADERBOARD_LENGTH 3
-#define MAX_SAVED_USERS 10
-#define USERNAME_BUFFER 25
+#define INITIAL_SIZE		8
+#define RESIZE_FACTOR		2
+#define RESIZE_THRESHOLD	0.75
+#define USERNAME_BUFFER 	10
 
 typedef struct {
     char username[USERNAME_BUFFER];
@@ -22,21 +23,26 @@ typedef struct {
 } Score;
 
 typedef struct {
-    Score data;
-    Score *next;
-} List;
+	Score *entries;
+	int current_size;
+	int num_scores;
+} Leaderboard;
 
-/* Could use linked list, might be better for re-sorting*/
-Score user_scores[LEADERBOARD_LENGTH];
+/* ---- Public Functions---- */
+Leaderboard* create_leaderboard();
 
-void get_leaderboard(char *str, int index);
+void free_leaderboard(Leaderboard *leaderboard);
 
-void set_leaderboard(char *user,int win);
+void update_score(Leaderboard *leaderboard, char *username, bool win);
 
-int find_user(char *user);
+void print_leaderboard(Leaderboard *leaderboard);
 
-int leaderboard_full(void);
+/* ---- Private Functions ---- */
+void add_user(Leaderboard *leaderboard, char *username);
 
-int users_full(void);
+void add_score(Leaderboard *leaderboard, Score score);
 
-int next_user_slot(void);
+/* If user found, return index of user. Else return -1. */
+int contains_user(Leaderboard *leaderboard, char *username);
+
+void score_to_string(char *str, Score score);
