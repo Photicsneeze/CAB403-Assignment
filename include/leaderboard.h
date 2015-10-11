@@ -18,19 +18,25 @@ typedef struct Leaderboard {
 	int size;
 } Leaderboard;
 
-Leaderboard* create_leaderboard(void);
+Leaderboard* create_leaderboard();
 
 void delete_leaderboard(Leaderboard *leaderboard);
 
-Leaderboard* sort_leaderboard(Leaderboard *leaderboard);
+void sort_leaderboard(Leaderboard *leaderboard);
+
+struct Score* get_score_at_index(Leaderboard *leaderboard, int atIndex);
+
+void pop(Leaderboard *leaderboard, int index);
+
+int move_score(Leaderboard *leaderboard, int atIndex, int toIndex);
+
+void push(Leaderboard *leaderboard, Score *score, int index);
 
 void update_score(Leaderboard *leaderboard, char *username, bool win);
 
-void add_score(Leaderboard *leaderboard, Score score);
+struct Score* add_user(Leaderboard *leaderboard, char *username);
 
-Score* add_user(Leaderboard *leaderboard, char *username);
-
-Score* get_score(Leaderboard *leaderboard, char *username);
+struct Score* get_score(Leaderboard *leaderboard, char *username);
 
 bool contains_user(Leaderboard *leaderboard, char *username);
 

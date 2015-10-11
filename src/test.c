@@ -10,17 +10,20 @@ int main(void)
 
 	leaderboard = create_leaderboard();
 
-	srand(time(NULL));
-
 	update_score(leaderboard, "Maolin", 1);
-	//update_score(leaderboard, "Shaun", 0);
-	//update_score(leaderboard, "Shaun", 1);
+	update_score(leaderboard, "Shaun", 0);
+	update_score(leaderboard, "Shaun", 1);
+	update_score(leaderboard, "Lachlan", 1);
+	update_score(leaderboard, "Lachlan", 1);
+	update_score(leaderboard, "Lachlan", 1);
+	update_score(leaderboard, "Bryan", 1);
 
 	print_leaderboard(leaderboard);
-    
-    leaderboard = sort_leaderboard(leaderboard);
+	printf("---------------------------------------------------------------------------------------------------------");
 
-    print_leaderboard(leaderboard);
+	move_score(leaderboard,1,2);
+
+	print_leaderboard(leaderboard);
 
 	delete_leaderboard(leaderboard);
 

@@ -58,7 +58,7 @@ void choose_words(Game *game, int number)
         perror("Cannot Open File!\n");
     }
 
-    //srand(time(NULL));
+    srand(time(NULL));
 
     int words = rand() % number;
 
