@@ -11,9 +11,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define INITIAL_SIZE		8
+#define INITIAL_SIZE		4
 #define RESIZE_FACTOR		2
-#define RESIZE_THRESHOLD	0.75
+#define RESIZE_THRESHOLD	0.7
 #define USERNAME_BUFFER 	10
 
 typedef struct {
@@ -44,5 +44,7 @@ void add_score(Leaderboard *leaderboard, Score score);
 
 /* If user found, return index of user. Else return -1. */
 int contains_user(Leaderboard *leaderboard, char *username);
+
+void resize_leaderboard(Leaderboard *leaderboard);
 
 void score_to_string(char *str, Score score);

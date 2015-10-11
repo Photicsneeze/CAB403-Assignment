@@ -68,7 +68,7 @@ static int  new_sock_fd;                  /* Socket descriptor for new connectio
 static bool client_connected = false;
 
 /* ---- Function Declarations ---- */
-int play_hangman(char *user);
+bool play_hangman(char *user);
 
 void send_leaderboard();
 

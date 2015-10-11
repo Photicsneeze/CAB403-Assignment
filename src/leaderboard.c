@@ -75,6 +75,14 @@ void add_user(Leaderboard *leaderboard, char *username)
 
 void add_score(Leaderboard *leaderboard, Score score)
 {
+	int num_scores = leaderboard->num_scores;
+	int current_size = leaderboard->current_size;
+	double ratio = (double)num_scores / current_size;
+
+	if (ratio > RESIZE_THRESHOLD) {
+		resize_leaderboard(leaderboard);
+	}
+
 	leaderboard->entries[leaderboard->num_scores] = score;
 	leaderboard->num_scores++;
 }
@@ -88,6 +96,19 @@ int contains_user(Leaderboard *leaderboard, char *username)
 	}
 
 	return -1;
+}
+
+void resize_leaderboard(Leaderboard *leaderboard)
+{
+	int new_size = leaderboard->current_size * RESIZE_FACTOR;
+
+	leaderboard->entries = realloc(leaderboard->entries, sizeof(Score) * new_size);
+	if (leaderboard->entries == NULL) {
+		perror("realloc");
+		exit(EXIT_FAILURE);
+	}
+
+	leaderboard->current_size = new_size;
 }
 
 void score_to_string(char *str, Score score)

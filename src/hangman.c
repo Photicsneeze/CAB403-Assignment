@@ -56,29 +56,29 @@ void choose_words(Game *game, int number)
     srand(time(NULL));
     int words = rand() % number;
 
-        char line[80];
+    char line[80];
 
-        int count = 0;
-        while(fgets(line, 80, fr) != NULL)
-         {
-             if(count == words){
-                 sscanf (line, "%[^,],%s", word1,word2);
-                 break;
-             }else{
-                 count++;
-             }
+    int count = 0;
+    while(fgets(line, 80, fr) != NULL)
+     {
+         if(count == words){
+             sscanf (line, "%[^,],%s", word1,word2);
+             break;
+         }else{
+             count++;
          }
-         fclose(fr);  /* close the file prior to exiting the routine */
-         game->len_word1 = strlen(word1);
-         game->len_word2 = strlen(word2);
+     }
+     fclose(fr);  /* close the file prior to exiting the routine */
+     game->len_word1 = strlen(word1);
+     game->len_word2 = strlen(word2);
 
-         for(int i=0;i<strlen(word1);i++){
-             game->guessed_word1_potion[i] = '_';
-         }
+     for(int i=0;i<strlen(word1);i++){
+         game->guessed_word1_potion[i] = '_';
+     }
 
-         for(int i=0;i<strlen(word2);i++){
-             game->guessed_word2_potion[i] = '_';
-         }
+     for(int i=0;i<strlen(word2);i++){
+         game->guessed_word2_potion[i] = '_';
+     }
 }
 
 
