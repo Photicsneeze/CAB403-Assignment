@@ -45,6 +45,8 @@ void add_score(Leaderboard *leaderboard, Score score);
 /* If user found, return index of user. Else return -1. */
 int contains_user(Leaderboard *leaderboard, char *username);
 
+void sort_leaderboard(Leaderboard *leaderboard);
+
 void resize_leaderboard(Leaderboard *leaderboard);
 
 void score_to_string(char *str, Score score);

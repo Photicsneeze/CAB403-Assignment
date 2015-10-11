@@ -47,6 +47,8 @@ void update_score(Leaderboard *leaderboard, char *username, bool win)
 
 	leaderboard->entries[index].games_played++;
 	leaderboard->entries[index].games_won += win;
+
+	sort_leaderboard(leaderboard);
 }
 
 void print_leaderboard(Leaderboard *leaderboard)
@@ -96,6 +98,22 @@ int contains_user(Leaderboard *leaderboard, char *username)
 	}
 
 	return -1;
+}
+
+void sort_leaderboard(Leaderboard *leaderboard)
+{
+	int num_scores = leaderboard->num_scores;
+
+	for (int i = 0; i < (num_scores - 1); i++) {
+		Score s1 = leaderboard->entries[i];
+		Score s2 = leaderboard->entries[i + 1];
+		
+		if (s1.games_won > s2.games_won) {
+			leaderboard->entries[i] = s2;
+			leaderboard->entries[i + 1] = s1;
+			i = 0;
+		}
+	}
 }
 
 void resize_leaderboard(Leaderboard *leaderboard)
