@@ -1,6 +1,6 @@
 #include "leaderboard.h"
 
-Leaderboard* create_leaderboard()
+Leaderboard* create_leaderboard(void)
 {
 	Leaderboard *leaderboard = malloc(sizeof(Leaderboard));
 	if (leaderboard == NULL) {
@@ -30,7 +30,7 @@ void delete_leaderboard(Leaderboard *leaderboard)
 	free(leaderboard);
 }
 
-void sort_leaderboard(Leaderboard *leaderboard)
+Leaderboard* sort_leaderboard(Leaderboard *leaderboard)
 {
 	/* The statistics for the clients should be displayed in ascending order of games won.
     If two or more players have the same number of games won then the player with the
@@ -40,7 +40,30 @@ void sort_leaderboard(Leaderboard *leaderboard)
     players in alphabetical order.
     */
 
+    /* IDEA - Copy leaderboard into array, sort array, new leaderboard from array, delete old leaderboard.*/
+    Leaderboard *new_leaderboard;
+    int num_scores = leaderboard->size;
+    Score score_array[num_scores];
+    Score *curr;
 
+    curr = leaderboard->first;
+
+    for (int i = 0; i < num_scores; i++) {
+    	score_array[i] = *curr;
+    	curr = curr->next;
+    }
+
+    // sort array
+
+    new_leaderboard = create_leaderboard();
+
+    for (int i = 0; i < num_scores; i++) {
+    	add_score(new_leaderboard, score_array[i]);
+    }
+
+    delete_leaderboard(leaderboard);
+
+    return new_leaderboard;
 }
 
 void update_score(Leaderboard *leaderboard, char *username, bool win)
@@ -55,13 +78,36 @@ void update_score(Leaderboard *leaderboard, char *username, bool win)
 
 	score->games_played++;
 	score->games_won += win;
+	leaderboard = sort_leaderboard(leaderboard);
+}
+
+void add_score(Leaderboard *leaderboard, Score score)
+{
+	Score *new_score;
+
+	new_score = malloc(sizeof(Score));
+	if (new_score == NULL) {
+		printf("Failed to allocate memory for new leaderboard entry.\n");
+		exit(EXIT_FAILURE);
+	}
+
+	memcpy(new_score, &score, sizeof(Score));
+
+	if (leaderboard->first == NULL) { 		/* Leaderboard is empty. */
+		leaderboard->first = new_score;
+		leaderboard->last = new_score;
+		new_score->next = NULL;
+	} else {								/* Add new user to start of list */
+		new_score->next = leaderboard->first;
+		leaderboard->first = new_score;
+	}
+
+    leaderboard->size++;
 }
 
 Score* add_user(Leaderboard *leaderboard, char *username)
 {
 	Score *new_score;
-	Score *current_score;
-	Score *previous_score;
 
 	new_score = malloc(sizeof(Score));
 	if (new_score == NULL) {

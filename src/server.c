@@ -54,10 +54,10 @@ int main(int argc, char *argv[])
         printf("Sending welcome message...\n");
         write_to_client(new_sock_fd, WELCOME_MESSAGE);
 
-        get_username(username);
-        get_password(password);
-        // strcpy(username, "Maolin");
-        // strcpy(password, "111111");
+        // get_username(username);
+        // get_password(password);
+        strcpy(username, "Maolin");
+        strcpy(password, "111111");
 
         if (!authenticate(username, password)) {
             printf("Sending auth failed message...\n");
