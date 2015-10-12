@@ -18,7 +18,6 @@ int main(int argc, char *argv[])
     char        username[8];
     char        password[6];
     int         menu_selection;
-    Leaderboard *leaderboard = {0};
 
     /* Check the user provided the correct arguments. If no port provided, use default. */
     if (argc < 2) {
@@ -79,7 +78,7 @@ int main(int argc, char *argv[])
                     update_score(leaderboard, username, win);
                     break;
                 case SHOW_LEADERBOARD:
-                    print_leaderboard(leaderboard);
+                    send_leaderboard(leaderboard);
                     break;
                 case QUIT:
                     disconnect_client(new_sock_fd);
@@ -144,15 +143,14 @@ bool play_hangman(char *user) {
     }
 }
 
-void send_leaderboard() {
-    // for(int i=0;i<LEADERBOARD_LENGTH;i++){
-    //     char leaderboard[BUF_SIZE] = {0};
+void send_leaderboard(Leaderboard *leaderboard) {
+    char score_str[BUF_SIZE];
 
-    //     get_leaderboard(leaderboard,i);
-
-    //     printf("Sending leaderboard...\n");
-    //     write_to_client(new_sock_fd, leaderboard);
-    // }
+    for (int i = 0; i < leaderboard->num_scores; i++) {
+        memset(score_str, 0, BUF_SIZE);
+        score_to_string(score_str, leaderboard->entries[i]);
+        write_to_client(new_sock_fd, score_str);
+    }
 }
 
 void get_username(char *username)
@@ -271,5 +269,6 @@ void disconnect_client(int sock_fd)
 void shutdown_server(int sig)
 {
     disconnect_client(new_sock_fd);
+    free_leaderboard(leaderboard);
     exit(EXIT_SUCCESS);
 }
