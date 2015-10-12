@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 
 #define INITIAL_SIZE		4
 #define RESIZE_FACTOR		2
@@ -50,3 +51,5 @@ void sort_leaderboard(Leaderboard *leaderboard);
 void resize_leaderboard(Leaderboard *leaderboard);
 
 void score_to_string(char *str, Score score);
+
+bool alphabetical_order(char *str1, char *str2);

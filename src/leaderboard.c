@@ -102,13 +102,35 @@ int contains_user(Leaderboard *leaderboard, char *username)
 
 void sort_leaderboard(Leaderboard *leaderboard)
 {
+	/*The statistics for the clients should be displayed in ascending order of games won.
+	If two or more players have the same number of games won then the player with the
+	highest percentage of games won should be displayed last (percentage is the number
+	of games won divided by the number of games played). If two or more players have
+	the same number of games won and the same percentage of games won then display those
+	players in alphabetical order.
+	*/
+
 	int num_scores = leaderboard->num_scores;
+	bool swap;
 
 	for (int i = 0; i < (num_scores - 1); i++) {
 		Score s1 = leaderboard->entries[i];
 		Score s2 = leaderboard->entries[i + 1];
+		swap = false;
 		
 		if (s1.games_won > s2.games_won) {
+			swap = true;
+		} else if (s1.games_won == s2.games_won) {
+			if ((s1.games_won / s1.games_played) > (s2.games_won / s2.games_played)) {
+				swap = true;
+			} else if ((s1.games_won / s1.games_played) == (s2.games_won / s2.games_played)) {
+				if (!alphabetical_order(s1.username, s2.username)) {
+					swap = true;
+				}
+			}
+		}
+
+		if (swap) {
 			leaderboard->entries[i] = s2;
 			leaderboard->entries[i + 1] = s1;
 			i = 0;
@@ -138,4 +160,13 @@ void score_to_string(char *str, Score score)
             score.username, score.games_won, score.games_played);
     strcat(str, temp);
     strcat(str, "\n==================================================\n");
+}
+
+bool alphabetical_order(char *str1, char *str2)
+{
+	if (strcasecmp(str1, str2) <= 0) {
+		return true;
+	} else {
+		return false;
+	}
 }

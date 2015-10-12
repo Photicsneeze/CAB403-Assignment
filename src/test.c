@@ -12,25 +12,16 @@ int main(void)
 
 	srand(time(NULL));
 
-	update_score(leaderboard, "Maolin", 1);
-    //print_leaderboard(leaderboard);
-    
 	update_score(leaderboard, "Shaun", 0);
-    print_leaderboard(leaderboard);
-	
-    update_score(leaderboard, "Shaun", 1);
-    print_leaderboard(leaderboard);
-    
-    update_score(leaderboard, "Tom", 1);
-    print_leaderboard(leaderboard);
-    
-    update_score(leaderboard, "Lachlan", 1);
-    print_leaderboard(leaderboard);
-    
-    update_score(leaderboard, "Shaun", 1);
-    print_leaderboard(leaderboard);
-    
+    update_score(leaderboard, "Shaun", 0);
+    update_score(leaderboard, "Tom", 0);
+    update_score(leaderboard, "Annie", 1);
+    //update_score(leaderboard, "Shaun", 0);
+    update_score(leaderboard, "Maolin", 0);
+    update_score(leaderboard, "Maolin", 0);
     update_score(leaderboard, "Maolin", 1);
+    update_score(leaderboard, "Tam", 0);
+    
 	print_leaderboard(leaderboard);
 
 	free_leaderboard(leaderboard);
