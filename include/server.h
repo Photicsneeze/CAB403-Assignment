@@ -66,6 +66,7 @@ typedef struct addrinfo addrinfo;
 static int  sock_fd;                      /* Initial socket descriptor */
 static int  new_sock_fd;                  /* Socket descriptor for new connection */
 static bool client_connected = false;
+static Leaderboard *leaderboard;
 
 /* ---- Function Declarations ---- */
 bool play_hangman(char *user);
