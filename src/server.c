@@ -18,6 +18,7 @@ int main(int argc, char *argv[])
     char        username[8];
     char        password[6];
     int         menu_selection;
+    pthread_t   client1_thread;
 
     /* Check the user provided the correct arguments. If no port provided, use default. */
     if (argc < 2) {
@@ -46,44 +47,24 @@ int main(int argc, char *argv[])
             perror("accept");
             continue; /* Failed to accept connection, continue to start on main loop. */
         }
-        client_connected = true;
         printf("Connection accepted.\n\n");
 
-        /* Send welcome message. */
-        printf("Sending welcome message...\n");
-        write_to_client(new_sock_fd, WELCOME_MESSAGE);
+        client1_data.id = 1;
+        client1_data.sock_fd = new_sock_fd;
+        client1_data.connected = true;
 
-        get_username(username);
-        get_password(password);
-        //strcpy(username, "Maolin");
-        //strcpy(password, "111111");
-
-        if (!authenticate(username, password)) {
-            printf("Sending auth failed message...\n");
-            write_to_client(new_sock_fd, AUTH_FAILED);
-
-            disconnect_client(new_sock_fd);
-            continue;
+        if (pthread_create(&client1_thread, NULL, handle_client, (void *) &client1_data) != 0) {
+            perror("pthread_create");
+            exit(EXIT_FAILURE);
         }
 
-        while (client_connected) {
-            printf("Sending main menu...\n");
-            write_to_client(new_sock_fd, MAIN_MENU);
+        if (pthread_join(client1_thread, NULL) != 0) {
+            perror("pthread_join");
+            exit(EXIT_FAILURE);
+        }
 
-            menu_selection = get_menu_selection();
-
-            switch (menu_selection) {
-                case PLAY_HANGMAN:;
-                    bool win = play_hangman(username);
-                    update_score(leaderboard, username, win);
-                    break;
-                case SHOW_LEADERBOARD:
-                    send_leaderboard(leaderboard);
-                    break;
-                case QUIT:
-                    disconnect_client(new_sock_fd);
-                    break;
-            }
+        if (0) {
+            authenticate(username, password);
         }
     }
 
@@ -93,6 +74,55 @@ int main(int argc, char *argv[])
     exit(EXIT_SUCCESS);
 }
 
+void* handle_client(void *client_data)
+{
+    char            username[10];
+    char            password[6];
+    int             menu_selection;
+    Client_Data     *client;
+
+    client = (Client_Data *) client_data;
+
+    /* Send welcome message. */
+    printf("Sending welcome message to client %d...\n", client->id);
+    write_to_client(client->sock_fd, WELCOME_MESSAGE);
+
+    get_username(username);
+    get_password(password);
+    //strcpy(username, "Maolin");
+    //strcpy(password, "111111");
+
+    if (!authenticate(username, password)) {
+        printf("Sending thread auth failed message to client %d...\n", client->id);
+        write_to_client(client->sock_fd, AUTH_FAILED);
+
+        disconnect_client(client->sock_fd);
+        client->connected = false;
+    }
+
+    while (client->connected) {
+        printf("Sending main menu to client %d...\n", client->id);
+        write_to_client(client->sock_fd, MAIN_MENU);
+
+        menu_selection = get_menu_selection();
+
+        switch (menu_selection) {
+            case PLAY_HANGMAN:;
+                bool win = play_hangman(username);
+                update_score(leaderboard, username, win);
+                break;
+            case SHOW_LEADERBOARD:
+                send_leaderboard(leaderboard);
+                break;
+            case QUIT:
+                disconnect_client(client->sock_fd);
+                client->connected = false;
+                break;
+        }
+    }
+
+    pthread_exit(NULL);
+}
 
 bool play_hangman(char *user) {
     Game game;
@@ -262,7 +292,6 @@ void disconnect_client(int sock_fd)
     printf("Sending disconnect signal...\n");
     write(sock_fd, DISCONNECT_SIGNAL, BUF_SIZE);
 
-    client_connected = false;
     close(sock_fd);
 }
 

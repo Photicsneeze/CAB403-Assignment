@@ -59,6 +59,13 @@ const char MAIN_MENU[] = "\n"
 
 const char MENU_PROMPT[] = "\nSelection option (1 - 3) --> ";
 
+/* ---- Type Definitions ---- */
+typedef struct {
+    int id;
+    int sock_fd;
+    bool connected;
+} Client_Data;
+
 /* typedef to remove need for struct keyword. */
 typedef struct addrinfo addrinfo;
 
@@ -67,8 +74,11 @@ static int  sock_fd;                      /* Initial socket descriptor */
 static int  new_sock_fd;                  /* Socket descriptor for new connection */
 static bool client_connected = false;
 static Leaderboard *leaderboard;
+Client_Data client1_data;
 
 /* ---- Function Declarations ---- */
+void* handle_client(void *client_data);
+
 bool play_hangman(char *user);
 
 void send_leaderboard();
