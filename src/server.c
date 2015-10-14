@@ -7,6 +7,13 @@
 /* ---- Includes ---- */
 #include "server.h"
 
+/* ---- Global Variables ---- */
+static int          passive_sock_fd;            /* Initial socket descriptor */
+static Leaderboard  *leaderboard;
+static Client_Info  global_clients[MAX_CLIENTS];
+static pthread_t    client_threads[MAX_CLIENTS];
+static int          num_clients_connected = 0;  /* Number of clients currently connected to server. */
+
 /* ---- Function Definitions ---- */
 int main(int argc, char *argv[])
 {
@@ -17,11 +24,8 @@ int main(int argc, char *argv[])
     char        send_buf[BUF_SIZE];         /* Buffer to store data to send to the client */
     char        username[USERNAME_LENGTH];
     char        password[PASSWORD_LENGTH];
-    pthread_t   client_threads[10];
-    pthread_t   client_thread;
-    int         num_clients_connected = 0;  /* Number of clients currently connected to server. */
     int         client_id = 0;              /* ID to give client. Increment for every connection. */
-    Client_Data current_client;
+    int         temp_sock_fd;
 
     /* Check the user provided the correct arguments. If no port provided, use default. */
     if (argc < 2) {
@@ -46,23 +50,27 @@ int main(int argc, char *argv[])
          * Accept is a blocking function and will wait for a connection if none available.
          */
         printf("\nWaiting for connection...\n");
-        global_client.sock_fd = accept(passive_sock_fd, addr->ai_addr, &addr->ai_addrlen);
-        if (global_client.sock_fd == -1) {
+        temp_sock_fd = accept(passive_sock_fd, addr->ai_addr, &addr->ai_addrlen);
+        if (temp_sock_fd == -1) {
             perror("accept");
             continue; /* Failed to accept connection, continue to start on main loop. */
         }
         printf("Connection accepted.\n\n");
 
-        global_client.id = ++client_id;
-        global_client.connected = true;
+        global_clients[client_id].sock_fd = temp_sock_fd;
+        global_clients[client_id].id = client_id;
+        global_clients[client_id].connected = true;
 
-        if (pthread_create(&client_thread, NULL, handle_client, (void *) &global_client) != 0) {
+        if (pthread_create(&client_threads[client_id], NULL, handle_client,
+                           (void *) &global_clients[client_id]) != 0) {
             perror("pthread_create");
             exit(EXIT_FAILURE);
         }
 
+        client_id++;
         num_clients_connected++;
 
+        /* DONT REMOVE: If removed the call to accept above returns bad address. No one knows why. */
         authenticate_user(username, password);
     }
 
@@ -72,15 +80,13 @@ int main(int argc, char *argv[])
     exit(EXIT_SUCCESS);
 }
 
-void* handle_client(void *client_data)
+void* handle_client(void *client_Info)
 {
-    // char            username[10];
-    // char            password[6];
     int             menu_selection;
     bool            win;
-    Client_Data     *client;
+    Client_Info     *client;
 
-    client = (Client_Data *) client_data;
+    client = (Client_Info *) client_Info;
 
     /* Send welcome message. */
     printf("Sending welcome message to client %d...\n", client->id);
@@ -95,7 +101,7 @@ void* handle_client(void *client_data)
         printf("Sending thread auth failed message to client %d...\n", client->id);
         write_to_client(client->sock_fd, AUTH_FAILED);
 
-        disconnect_client(client->sock_fd);
+        disconnect_client(client);
         client->connected = false;
     }
 
@@ -114,7 +120,7 @@ void* handle_client(void *client_data)
                 send_leaderboard(leaderboard, client);
                 break;
             case QUIT:
-                disconnect_client(client->sock_fd);
+                disconnect_client(client);
                 client->connected = false;
                 break;
         }
@@ -123,7 +129,7 @@ void* handle_client(void *client_data)
     pthread_exit(NULL);
 }
 
-bool play_hangman(Client_Data *client) {
+bool play_hangman(Client_Info *client) {
     Game game;
     char guess[2];                  /* Not sure why this had to be 2 char array. Breaks as a char. */
     char game_interface[BUF_SIZE];
@@ -136,7 +142,7 @@ bool play_hangman(Client_Data *client) {
     for (;;) {
         memset(game_interface, 0, sizeof(game_interface)); /* Clear the interface from previous round. */
         display_game(&game, game_interface);
-        printf("Sending game interface...\n");
+        printf("Sending game interface to client %d...\n", client->id);
         write_to_client(client->sock_fd, game_interface);
 
         if (check_complete(&game)) { /* Win */
@@ -144,7 +150,7 @@ bool play_hangman(Client_Data *client) {
             sprintf(game_over_message,
                     "\n\nGame Over\nWell done %s! You won this round of Hangman!", client->username);
 
-            printf("Sending win message...\n");
+            printf("Sending win message to client %d...\n", client->id);
             write_to_client(client->sock_fd, game_over_message);
             return win;
         }
@@ -154,12 +160,12 @@ bool play_hangman(Client_Data *client) {
                     "\n\nGame Over\nBad luck %s! You have run out of guesses. The Hangman got you!",
                     client->username);
 
-            printf("Sending lose message...\n");
+            printf("Sending lose message to client %d...\n", client->id);
             write_to_client(client->sock_fd, game_over_message);
             return win;
         }
 
-        printf("Waiting for guess from client...\n");
+        printf("Waiting for guess from client %d...\n", client->id);
         /* Have to receive 2 bytes otherwise it seems to read the enter key character on next loop. */
         if (read(client->sock_fd, guess, BUF_SIZE) == -1) {
             perror("read");
@@ -173,7 +179,7 @@ bool play_hangman(Client_Data *client) {
     }
 }
 
-void send_leaderboard(Leaderboard *leaderboard, Client_Data *client) {
+void send_leaderboard(Leaderboard *leaderboard, Client_Info *client) {
     char score_str[BUF_SIZE];
 
     for (int i = 0; i < leaderboard->num_scores; i++) {
@@ -183,32 +189,32 @@ void send_leaderboard(Leaderboard *leaderboard, Client_Data *client) {
     }
 }
 
-void get_username(Client_Data *client)
+void get_username(Client_Info *client)
 {
     /* Prompt for username. */
-    printf("Sending username prompt...\n");
+    printf("Sending username prompt to client %d...\n", client->id);
     write_to_client(client->sock_fd, USERNAME_PROMPT);
 
-    printf("Waiting for username from client...\n");
+    printf("Waiting for username from client %d...\n", client->id);
     if (read(client->sock_fd, client->username, BUF_SIZE) == -1) {
         perror("read");
         exit(EXIT_FAILURE);
     }
-    printf("Username received.\n");
+    printf("Username received from client %d...\n", client->id);
 }
 
-void get_password(Client_Data *client)
+void get_password(Client_Info *client)
 {
     /* Prompt for password. */
-    printf("Sending password prompt...\n");
+    printf("Sending password prompt to client %d...\n", client->id);
     write_to_client(client->sock_fd, PASSWORD_PROMPT);
 
-    printf("Waiting for password from client...\n");
+    printf("Waiting for password from client %d...\n", client->id);
     if (read(client->sock_fd, client->password, BUF_SIZE) == -1) {
         perror("read");
         exit(EXIT_FAILURE);
     }
-    printf("Password received.\n");
+    printf("Password received from client %d...\n", client->id);
 }
 
 bool authenticate_user(char *username, char *password)
@@ -216,6 +222,7 @@ bool authenticate_user(char *username, char *password)
     FILE *file;
     char file_username[USERNAME_LENGTH];
     char file_password[PASSWORD_LENGTH];
+    bool match;
 
     /* !!! REMOVE THE bin/ FROM FILE NAME BEFOER SUBMISSION. Only there for convenience while testing. */
     if ((file = fopen("bin/Authentication.txt", "r")) == NULL) {
@@ -229,34 +236,35 @@ bool authenticate_user(char *username, char *password)
     while (fscanf(file, "%s %s\n", file_username, file_password) > 0) {
         /* Check if the username matches one in the file, and if the password matches for that username. */
         if (strcmp(file_username, username) == 0 && strcmp(file_password, password) == 0) {
-            return true;
+            match = true;
+            break;
         }
     }
 
-    return false; /* No matches found. */
+    fclose(file);
+    return match;
 }
 
-int get_menu_selection(Client_Data *client)
+int get_menu_selection(Client_Info *client)
 {
     char selection_str[BUF_SIZE];
 
     /* Prompt for main menu. */
-    printf("Sending menu selection prompt...\n");
+    printf("Sending menu selection prompt to client %d...\n", client->id);
     write_to_client(client->sock_fd, MENU_PROMPT);
 
-    printf("Waiting for menu selection from client...\n");
+    printf("Waiting for menu selection from client %d...\n", client->id);
     if (read(client->sock_fd, selection_str, BUF_SIZE) == -1) {
         perror("read");
         exit(EXIT_FAILURE);
     }
-    printf("Menu selection received.\n");
+    printf("Menu selection received from client %d...\n", client->id);
 
     return atoi(selection_str); /* Convert string to int. */
 }
 
 void write_to_client(int sock_fd, const char *message)
 {
-    // if (write(sock_fd, message, strlen(message)) == -1) {
     if (write(sock_fd, message, BUF_SIZE) == -1) {
         perror("write");
         exit(EXIT_FAILURE);
@@ -312,17 +320,22 @@ int create_passive_socket(char *port, addrinfo *addr)
     return sock_fd;
 }
 
-void disconnect_client(int sock_fd)
+void disconnect_client(Client_Info *client)
 {
-    printf("Sending disconnect signal...\n");
-    write(sock_fd, DISCONNECT_SIGNAL, BUF_SIZE);
+    printf("Sending disconnect signal to client %d...\n", client->id);
+    write(client->sock_fd, DISCONNECT_SIGNAL, BUF_SIZE);
+    close(client->sock_fd);
 
-    close(sock_fd);
+    num_clients_connected--;
 }
 
 void shutdown_server(int sig)
 {
-    disconnect_client(global_client.sock_fd);
+    int num_clients = num_clients_connected;
+
+    for (int i = 0; i < num_clients; i++) {
+        disconnect_client(&global_clients[i]);
+    }
     free_leaderboard(leaderboard);
     close(passive_sock_fd);
 

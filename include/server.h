@@ -33,6 +33,7 @@
 #define QUIT                3
 #define USERNAME_LENGTH     10
 #define PASSWORD_LENGTH     6
+#define MAX_CLIENTS         10
 
 /* ---- Menu Graphics ---- */
 const char WELCOME_MESSAGE[] = "\n"
@@ -67,37 +68,30 @@ typedef struct {
     bool connected;
     char username[USERNAME_LENGTH];
     char password[PASSWORD_LENGTH];
-} Client_Data;
+} Client_Info;
 
 /* typedef to remove need for struct keyword. */
 typedef struct addrinfo addrinfo;
 
-/* ---- Global Variables ---- */
-static int  passive_sock_fd;                      /* Initial socket descriptor */
-static bool client_connected = false;
-static Leaderboard *leaderboard;
-Client_Data clients[10];
-Client_Data global_client;
-
 /* ---- Function Declarations ---- */
-void* handle_client(void *client_data);
+void* handle_client(void *client_Info);
 
-bool play_hangman(Client_Data *client);
+bool play_hangman(Client_Info *client);
 
-void send_leaderboard(Leaderboard *leaderboard, Client_Data *client);
+void send_leaderboard(Leaderboard *leaderboard, Client_Info *client);
 
-void get_username(Client_Data *client);
+void get_username(Client_Info *client);
 
-void get_password(Client_Data *client);
+void get_password(Client_Info *client);
 
 bool authenticate_user(char *username, char *password);
 
-int get_menu_selection(Client_Data *client);
+int get_menu_selection(Client_Info *client);
 
 void write_to_client(int sock_fd, const char *message);
 
 int create_passive_socket(char *port, addrinfo *addr);
 
-void disconnect_client(int sock_fd);
+void disconnect_client(Client_Info *client);
 
 void shutdown_server(int sig);
