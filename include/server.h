@@ -24,6 +24,7 @@
 
 /* ---- Defines ---- */
 #define DEFAULT_PORT        "12345"
+#define PORT_LENGTH         6
 #define NO_FLAGS            0
 #define LISTEN_BACKLOG      10
 #define BUF_SIZE            256
@@ -63,11 +64,12 @@ const char MENU_PROMPT[] = "\nSelection option (1 - 3) --> ";
 
 /* ---- Type Definitions ---- */
 typedef struct {
-    int id;
-    int sock_fd;
-    bool connected;
-    char username[USERNAME_LENGTH];
-    char password[PASSWORD_LENGTH];
+    int         id;
+    int         sock_fd;
+    pthread_t   pthread_id;
+    bool        connected;
+    char        username[USERNAME_LENGTH];
+    char        password[PASSWORD_LENGTH];
 } Client_Info;
 
 /* typedef to remove need for struct keyword. */
@@ -84,7 +86,9 @@ void get_username(Client_Info *client);
 
 void get_password(Client_Info *client);
 
-bool authenticate_user(char *username, char *password);
+bool authenticate_client(Client_Info *client);
+
+bool check_login(char *username, char *password);
 
 int get_menu_selection(Client_Info *client);
 
