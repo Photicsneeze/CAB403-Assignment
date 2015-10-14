@@ -19,7 +19,6 @@
 #include <termios.h>        /* To stop terminal from echoing ^C */
 #include <unistd.h>         /* For close() */
 
-#include "authentication.h"
 #include "hangman.h"
 #include "leaderboard.h"
 
@@ -32,6 +31,8 @@
 #define PLAY_HANGMAN        1
 #define SHOW_LEADERBOARD    2
 #define QUIT                3
+#define USERNAME_LENGTH     10
+#define PASSWORD_LENGTH     6
 
 /* ---- Menu Graphics ---- */
 const char WELCOME_MESSAGE[] = "\n"
@@ -64,30 +65,34 @@ typedef struct {
     int id;
     int sock_fd;
     bool connected;
+    char username[USERNAME_LENGTH];
+    char password[PASSWORD_LENGTH];
 } Client_Data;
 
 /* typedef to remove need for struct keyword. */
 typedef struct addrinfo addrinfo;
 
 /* ---- Global Variables ---- */
-static int  sock_fd;                      /* Initial socket descriptor */
-static int  new_sock_fd;                  /* Socket descriptor for new connection */
+static int  passive_sock_fd;                      /* Initial socket descriptor */
 static bool client_connected = false;
 static Leaderboard *leaderboard;
-Client_Data client1_data;
+Client_Data clients[10];
+Client_Data global_client;
 
 /* ---- Function Declarations ---- */
 void* handle_client(void *client_data);
 
-bool play_hangman(char *user);
+bool play_hangman(Client_Data *client);
 
-void send_leaderboard();
+void send_leaderboard(Leaderboard *leaderboard, Client_Data *client);
 
-void get_username(char *username);
+void get_username(Client_Data *client);
 
-void get_password(char *password);
+void get_password(Client_Data *client);
 
-int get_menu_selection();
+bool authenticate_user(char *username, char *password);
+
+int get_menu_selection(Client_Data *client);
 
 void write_to_client(int sock_fd, const char *message);
 
