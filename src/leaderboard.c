@@ -15,7 +15,7 @@ Leaderboard* create_leaderboard()
     return leaderboard;
 }
 
-void delete_leaderboard(Leaderboard *leaderboard)
+void free_leaderboard(Leaderboard *leaderboard)
 {
 	Score *current_score = leaderboard->first;
 	Score *previous_score;
@@ -40,17 +40,50 @@ void sort_leaderboard(Leaderboard *leaderboard)
     players in alphabetical order.
     */
 
-
+	int num_scores = leaderboard->size;
+	bool swap;
+	for (int i = 0; i < (num_scores - 1); i++) {
+		printf("---------------Comparing:%d and %d---------------------------\n",i,i+1);
+		print_leaderboard(leaderboard);
+		Score *s1 = get_score_at_index(leaderboard,i);
+		Score *s2 = get_score_at_index(leaderboard,i+1);
+		swap = false;
+		if (s1->games_won > s2->games_won) {
+			swap = true;
+		} else if (s1->games_won == s2->games_won) {
+			if ((s1->games_won / s1->games_played) > (s2->games_won / s2->games_played)) {
+				swap = true;
+			} else if ((s1->games_won / s1->games_played) == (s2->games_won / s2->games_played)) {
+				if (!alphabetical_order(s1->username, s2->username)) {
+					swap = true;
+				}
+			}
+		}
+		if (swap) {
+			printf("-------------------------Swapped---------------------------\n");
+			swap_score(leaderboard,i,i+1);
+			i = -1;
+		}
+	}
 }
 
-Score* get_score_at_index(Leaderboard *leaderboard, int atIndex){
-	if(atIndex<0){
+bool alphabetical_order(char *str1, char *str2)
+{
+	if (strcasecmp(str1, str2) <= 0) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+Score* get_score_at_index(Leaderboard *leaderboard, int fromIndex){
+	if(fromIndex<0){
 		return NULL;
 	}
 	Score *moving;
 	moving = leaderboard->first;
-	if(atIndex != 0){
-		for(int i=0;i<atIndex;i++){
+	if(fromIndex != 0){
+		for(int i=0;i<fromIndex;i++){
 			moving = moving->next;
 		}
 	}
@@ -59,38 +92,55 @@ Score* get_score_at_index(Leaderboard *leaderboard, int atIndex){
 
 
 /* If index is 0 then there is nothing before it and therefore returns null*/
-Score* get_score_before_index(Leaderboard *leaderboard, int atIndex){
-	if(atIndex<=0){
+Score* get_score_before_index(Leaderboard *leaderboard, int fromIndex){
+	if(fromIndex<=0){
 		return NULL;
 	}
 	Score *moving;
 	moving = leaderboard->first;
-	if(atIndex != 0){
-		for(int i=1;i<atIndex;i++){
+	if(fromIndex != 0){
+		for(int i=1;i<fromIndex;i++){
 			moving = moving->next;
 		}
 	}
 	return moving;
 }
 
-int move_score(Leaderboard *leaderboard, int atIndex, int toIndex){
-	if(atIndex == toIndex){
+int move_score(Leaderboard *leaderboard, int fromIndex, int toIndex){
+	if(fromIndex == toIndex){
 		return -1;
 	}
-	if((atIndex < 0)||(toIndex < 0)){
+	if((fromIndex < 0)||(toIndex < 0)){
 		return -1;
 	}
-	Score *current = get_score_at_index(leaderboard, atIndex);
+	Score *current = get_score_at_index(leaderboard, fromIndex);
 
 
-	pop(leaderboard,atIndex);
+	pop(leaderboard,fromIndex);
+	push(leaderboard,current,toIndex);
 
-	if(toIndex<atIndex){
-		push(leaderboard,current,toIndex);
+}
+
+int swap_score(Leaderboard *leaderboard, int fromIndex, int toIndex){
+	if(move_score(leaderboard,fromIndex,toIndex)==-1){
+		return -1;
+	}
+
+	int passed;
+	if(fromIndex>toIndex){
+		if(toIndex == leaderboard->size-1){
+			passed = move_score(leaderboard,toIndex,fromIndex);
+		}else{
+			passed = move_score(leaderboard,toIndex+1,fromIndex);
+		}
 	}else{
-		push(leaderboard,current,toIndex-1);
+		if(toIndex == 0){
+			passed = move_score(leaderboard,toIndex,fromIndex);
+		}else{
+			passed = move_score(leaderboard,toIndex-1,fromIndex);
+		}
 	}
-
+	return passed;
 }
 
 void pop(Leaderboard *leaderboard, int index){
@@ -117,6 +167,14 @@ void pop(Leaderboard *leaderboard, int index){
 
 void push(Leaderboard *leaderboard, Score *score, int index){
 	/* If pop is done first the list for push will be one less*/
+	if(index == (leaderboard->size)){
+		/* Push last */
+		leaderboard->last->next = score;
+		leaderboard->last = score;
+		score->next = NULL;
+		leaderboard->size++;
+		return;
+	}
 	Score *before =  get_score_before_index(leaderboard, index);
 	Score *current = get_score_at_index(leaderboard, index);
 	if(index == 0){
@@ -124,11 +182,6 @@ void push(Leaderboard *leaderboard, Score *score, int index){
 		score->next = leaderboard->first;
 		leaderboard->first = score;
 
-	}else if(index == (leaderboard->size-1)){
-		/* Push last */
-		current->next = score;
-		leaderboard->last = score;
-		score->next = NULL;
 	}else{
 		/* Normal Push */
 		score->next = current;

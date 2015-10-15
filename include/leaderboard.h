@@ -1,7 +1,8 @@
-#include <stdlib.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 
 #define USERNAME_LENGTH	8
 
@@ -20,15 +21,19 @@ typedef struct Leaderboard {
 
 Leaderboard* create_leaderboard();
 
-void delete_leaderboard(Leaderboard *leaderboard);
+int swap_score(Leaderboard *leaderboard, int fromIndex, int toIndex);
+
+void free_leaderboard(Leaderboard *leaderboard);
 
 void sort_leaderboard(Leaderboard *leaderboard);
 
-struct Score* get_score_at_index(Leaderboard *leaderboard, int atIndex);
+struct Score* get_score_at_index(Leaderboard *leaderboard, int fromIndex);
+
+bool alphabetical_order(char *str1, char *str2);
 
 void pop(Leaderboard *leaderboard, int index);
 
-int move_score(Leaderboard *leaderboard, int atIndex, int toIndex);
+int move_score(Leaderboard *leaderboard, int fromIndex, int toIndex);
 
 void push(Leaderboard *leaderboard, Score *score, int index);
 

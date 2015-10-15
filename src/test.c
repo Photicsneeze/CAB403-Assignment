@@ -10,20 +10,49 @@ int main(void)
 
 	leaderboard = create_leaderboard();
 
-	update_score(leaderboard, "Maolin", 1);
-	update_score(leaderboard, "Shaun", 0);
-	update_score(leaderboard, "Shaun", 1);
-	update_score(leaderboard, "Lachlan", 1);
-	update_score(leaderboard, "Lachlan", 1);
-	update_score(leaderboard, "Lachlan", 1);
-	update_score(leaderboard, "Bryan", 1);
+    update_score(leaderboard, "Four", 0);
+	update_score(leaderboard, "Three", 1);
+	update_score(leaderboard, "Two", 0);
+	update_score(leaderboard, "Two", 1);
+	update_score(leaderboard, "One", 1);
+	update_score(leaderboard, "Six", 1);
+	update_score(leaderboard, "Six", 1);
+	update_score(leaderboard, "Six", 1);
+	update_score(leaderboard, "One", 1);
+	update_score(leaderboard, "Five", 0);
+	update_score(leaderboard, "One", 1);
+	update_score(leaderboard, "Zero", 1);
+	update_score(leaderboard, "Seven", 1);
+	update_score(leaderboard, "Seven", 1);
+	update_score(leaderboard, "Seven", 1);
+	update_score(leaderboard, "Eight", 1);
+	update_score(leaderboard, "Eight", 1);
+	update_score(leaderboard, "Eight", 1);
+	update_score(leaderboard, "Eight", 1);
+	update_score(leaderboard, "Nine", 1);
+	update_score(leaderboard, "Nine", 1);
+	update_score(leaderboard, "Nine", 1);
+	update_score(leaderboard, "Nine", 1);
+	update_score(leaderboard, "Nine", 0);
+	update_score(leaderboard, "Nine", 0);
+	update_score(leaderboard, "Eighteen", 1);
+	update_score(leaderboard, "Eighteen", 1);
+	update_score(leaderboard, "Eighteen", 1);
+	update_score(leaderboard, "Eighteen", 1);
+
+	sort_leaderboard(leaderboard);
+	/*
+	int from = 2;
+	int to = 0;
 
 	print_leaderboard(leaderboard);
-	printf("---------------------------------------------------------------------------------------------------------");
+	printf("--------------------%d at %d----------------------\n",from,to);
+	printf("--------------------%d at %d----------------------\n",to,from);
 
-	move_score(leaderboard,1,2);
+	swap_score(leaderboard,from,to);
+	*/
 
-	print_leaderboard(leaderboard);
+	//print_leaderboard(leaderboard);
 
 	delete_leaderboard(leaderboard);
 
