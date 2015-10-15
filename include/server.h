@@ -34,8 +34,8 @@
 #define SHOW_LEADERBOARD    2
 #define QUIT                3
 #define USERNAME_LENGTH     10
-#define PASSWORD_LENGTH     6
-#define MAX_CLIENTS         1
+#define PASSWORD_LENGTH     10
+#define MAX_CLIENTS         10
 
 /* ---- Menu Graphics ---- */
 const char WELCOME_MESSAGE[] = "\n"
