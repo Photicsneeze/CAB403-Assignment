@@ -85,17 +85,17 @@ bool play_hangman(Client_Info *client);
 
 void send_leaderboard(Leaderboard *leaderboard, Client_Info *client);
 
-void get_username(Client_Info *client);
+int get_username(Client_Info *client);
 
-void get_password(Client_Info *client);
+int get_password(Client_Info *client);
 
-bool authenticate_client(Client_Info *client);
-
-bool check_login(char *username, char *password);
+bool authenticate_login(char *username, char *password);
 
 int get_menu_selection(Client_Info *client);
 
-void write_to_client(int sock_fd, const char *message);
+void write_to_socket(int sock_fd, const char *str);
+
+int read_from_socket(int sock_fd, char *str);
 
 int create_passive_socket(char *port, addrinfo *addr);
 

@@ -77,7 +77,7 @@ static void *read_socket(void *data)
 
     sock_fd = (int *) data;
 
-    for (;;) {
+    while (!quit) {
         if (read(*sock_fd, recv_buf, BUF_SIZE) == -1) {
             perror("read");
             exit(EXIT_FAILURE);
@@ -85,13 +85,15 @@ static void *read_socket(void *data)
 
         if (strcmp(recv_buf, DISCONNECT_SIGNAL) == 0) {
             printf("\nReceived disconnect signal from server. Press any key to quit.\n");
-            quit = true;
-            pthread_exit(NULL);
+            write(*sock_fd, DISCONNECT_SIGNAL, BUF_SIZE);
+            break;
         }
 
         printf("%s", recv_buf);
         fflush(stdout);
     }
+
+    pthread_exit(NULL);
 }
 
 int create_connection(char *host, char *port) {

@@ -117,6 +117,10 @@ void* handle_client(void *client_Info)
     while (server_running) {
         sem_wait(&sem_client);
 
+        if (!server_running) { /* Tells thread to quit when server is shutdown while waiting for client. */
+            break;
+        }
+
         client = (Client_Info *) client_Info;
 
         client->sock_fd = get_client_from_queue();
@@ -124,17 +128,22 @@ void* handle_client(void *client_Info)
 
         /* Send welcome message. */
         printf("Sending welcome message to client on socket %d...\n", client->sock_fd);
-        write_to_client(client->sock_fd, WELCOME_MESSAGE);
+        write_to_socket(client->sock_fd, WELCOME_MESSAGE);
 
-        if (!authenticate_client(client)) {
-            printf("Sending auth failed message to client on socket %d...\n", client->sock_fd);
-            write_to_client(client->sock_fd, AUTH_FAILED);
+        if (get_username(client) == -1 || get_password(client) == -1) {
             client->connected = false;
         }
 
         while (client->connected) {
+
+            if (!authenticate_login(client->username, client->password)) {
+                printf("Sending auth failed message to client on socket %d...\n", client->sock_fd);
+                write_to_socket(client->sock_fd, AUTH_FAILED);
+                client->connected = false;
+            }
+
             printf("Sending main menu to client on socket %d...\n", client->sock_fd);
-            write_to_client(client->sock_fd, MAIN_MENU);
+            write_to_socket(client->sock_fd, MAIN_MENU);
 
             menu_selection = get_menu_selection(client);
 
@@ -150,12 +159,10 @@ void* handle_client(void *client_Info)
                     send_leaderboard(leaderboard, client);
                     break;
                 case QUIT:
-                    client->connected = false;
+                    disconnect_client(client);
                     break;
             }
         }
-
-        disconnect_client(client);
 
         sem_post(&sem_client_handler);
     }
@@ -191,11 +198,11 @@ bool play_hangman(Client_Info *client) {
     choose_words(&game, get_number_words_available());
     number_of_guesses(&game);
 
-    for (;;) {
+    while (client->connected) {
         memset(game_interface, 0, sizeof(game_interface)); /* Clear the interface from previous round. */
         display_game(&game, game_interface);
         printf("Sending game interface to client on socket %d...\n", client->sock_fd);
-        write_to_client(client->sock_fd, game_interface);
+        write_to_socket(client->sock_fd, game_interface);
 
         if (check_complete(&game)) { /* Win */
             win = true;
@@ -203,7 +210,7 @@ bool play_hangman(Client_Info *client) {
                     "\n\nGame Over\nWell done %s! You won this round of Hangman!", client->username);
 
             printf("Sending win message to client on socket %d...\n", client->sock_fd);
-            write_to_client(client->sock_fd, game_over_message);
+            write_to_socket(client->sock_fd, game_over_message);
             return win;
         }
 
@@ -213,15 +220,14 @@ bool play_hangman(Client_Info *client) {
                     client->username);
 
             printf("Sending lose message to client on socket %d...\n", client->sock_fd);
-            write_to_client(client->sock_fd, game_over_message);
+            write_to_socket(client->sock_fd, game_over_message);
             return win;
         }
 
         printf("Waiting for guess from client on socket %d...\n", client->sock_fd);
         /* Have to receive 2 bytes otherwise it seems to read the enter key character on next loop. */
-        if (read(client->sock_fd, guess, BUF_SIZE) == -1) {
-            perror("read");
-            exit(EXIT_FAILURE);
+        if (read_from_socket(client->sock_fd, guess) == -1) {
+            client->connected = false;
         }
 
         update_guess(&game, guess[0]);
@@ -229,6 +235,8 @@ bool play_hangman(Client_Info *client) {
         game.guesses_made[game.guess_count] = guess[0];
         game.guess_count++;
     }
+
+    return win;
 }
 
 void send_leaderboard(Leaderboard *leaderboard, Client_Info *client) {
@@ -237,47 +245,41 @@ void send_leaderboard(Leaderboard *leaderboard, Client_Info *client) {
     for (int i = 0; i < leaderboard->num_scores; i++) {
         memset(score_str, 0, BUF_SIZE);
         score_to_string(score_str, leaderboard->entries[i]);
-        write_to_client(client->sock_fd, score_str);
+        write_to_socket(client->sock_fd, score_str);
     }
 }
 
-void get_username(Client_Info *client)
+int get_username(Client_Info *client)
 {
     /* Prompt for username. */
     printf("Sending username prompt to client on socket %d...\n", client->sock_fd);
-    write_to_client(client->sock_fd, USERNAME_PROMPT);
+    write_to_socket(client->sock_fd, USERNAME_PROMPT);
 
     printf("Waiting for username from client on socket %d...\n", client->sock_fd);
-    if (read(client->sock_fd, client->username, BUF_SIZE) == -1) {
-        perror("read");
-        exit(EXIT_FAILURE);
+    if (read_from_socket(client->sock_fd, client->username) == -1) {
+        return -1;
     }
     printf("Username received from client on socket %d...\n", client->sock_fd);
+
+    return 1;
 }
 
-void get_password(Client_Info *client)
+int get_password(Client_Info *client)
 {
     /* Prompt for password. */
     printf("Sending password prompt to client on socket %d...\n", client->sock_fd);
-    write_to_client(client->sock_fd, PASSWORD_PROMPT);
+    write_to_socket(client->sock_fd, PASSWORD_PROMPT);
 
     printf("Waiting for password from client on socket %d...\n", client->sock_fd);
-    if (read(client->sock_fd, client->password, BUF_SIZE) == -1) {
-        perror("read");
-        exit(EXIT_FAILURE);
+    if (read_from_socket(client->sock_fd, client->password) == -1) {
+        return -1;
     }
     printf("Password received from client on socket %d...\n", client->sock_fd);
+
+    return 1;
 }
 
-bool authenticate_client(Client_Info *client)
-{
-    get_username(client);
-    get_password(client);
-
-    return check_login(client->username, client->password);
-}
-
-bool check_login(char *username, char *password)
+bool authenticate_login(char *username, char *password)
 {
     FILE *file;
     char file_username[USERNAME_LENGTH];
@@ -311,24 +313,37 @@ int get_menu_selection(Client_Info *client)
 
     /* Prompt for main menu. */
     printf("Sending menu selection prompt to client on socket %d...\n", client->sock_fd);
-    write_to_client(client->sock_fd, MENU_PROMPT);
+    write_to_socket(client->sock_fd, MENU_PROMPT);
 
     printf("Waiting for menu selection from client on socket %d...\n", client->sock_fd);
-    if (read(client->sock_fd, selection_str, BUF_SIZE) == -1) {
-        perror("read");
-        exit(EXIT_FAILURE);
+    if (read_from_socket(client->sock_fd, selection_str) == -1) {
+        return QUIT;
     }
     printf("Menu selection received from client on socket %d...\n", client->sock_fd);
 
     return atoi(selection_str); /* Convert string to int. */
 }
 
-void write_to_client(int sock_fd, const char *message)
+void write_to_socket(int sock_fd, const char *str)
 {
-    if (write(sock_fd, message, BUF_SIZE) == -1) {
+    if (write(sock_fd, str, BUF_SIZE) == -1) {
         perror("write");
         exit(EXIT_FAILURE);
     }
+}
+
+int read_from_socket(int sock_fd, char *str)
+{
+    if (read(sock_fd, str, BUF_SIZE) == -1) {
+        perror("read");
+        exit(EXIT_FAILURE);
+    }
+
+    if (strcmp(str, DISCONNECT_SIGNAL) == 0) {
+        return -1;
+    }
+
+    return 0;
 }
 
 /* Function to create socket, bind it and mark it to accept incoming connections. */
@@ -392,9 +407,13 @@ void disconnect_client(Client_Info *client)
 void shutdown_server(int sig)
 {
     for (int i = 0; i < MAX_CLIENTS; i++) {
-        //if (clients_infos[i].connected) {
+        sem_post(&sem_client);
+    }
+
+    for (int i = 0; i < MAX_CLIENTS; i++) {
+        if (clients_infos[i].connected) {
             disconnect_client(&clients_infos[i]);
-        //}
+        }
     }
 
     server_running = false;
