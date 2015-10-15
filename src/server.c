@@ -348,6 +348,7 @@ int create_passive_socket(char *port, addrinfo *addr)
     int         sock_fd;        /* Socket descriptor to return */
     addrinfo    hints;          /* Used to set criteria for getaddrinfo() */
     addrinfo    *addr_list;     /* Linked list of addresses returned by getaddrinfo() */
+    addrinfo    *addr_test;
 
     memset(&hints, 0, sizeof(struct addrinfo));
     /* Set critera for the addresses returned by getaddrinfo. */
@@ -363,11 +364,11 @@ int create_passive_socket(char *port, addrinfo *addr)
     }
 
     /* Attempt to bind to each address from the list. If bind successful, leave loop. */
-    for (addr = addr_list; addr != NULL; addr = addr->ai_next) {
+    for (addr_test = addr_list; addr_test != NULL; addr_test = addr->ai_next) {
         /* Create socket using addrinfo. */
-        if ((sock_fd = socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol)) != -1) {
+        if ((sock_fd = socket(addr_test->ai_family, addr_test->ai_socktype, addr_test->ai_protocol)) != -1) {
             /* Bind using opened socket. */
-            if (bind(sock_fd, addr->ai_addr, addr->ai_addrlen) == 0) {
+            if (bind(sock_fd, addr_test->ai_addr, addr_test->ai_addrlen) == 0) {
                 break; /* Bind succeded. */
             }
 
@@ -375,7 +376,7 @@ int create_passive_socket(char *port, addrinfo *addr)
         }
     }
 
-    if (addr == NULL) { /* No bind successful. */
+    if (addr_test == NULL) { /* No bind successful. */
         perror("bind");
         exit(EXIT_FAILURE);
     }
@@ -385,6 +386,8 @@ int create_passive_socket(char *port, addrinfo *addr)
         perror("listen");
         exit(EXIT_FAILURE);
     }
+
+    *addr = *addr_test;
 
     freeaddrinfo(addr_list); /* Free dynamically allocated memory from getaddrinfo(). */
 
