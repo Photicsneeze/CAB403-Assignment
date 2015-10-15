@@ -133,7 +133,7 @@ void sort_leaderboard(Leaderboard *leaderboard)
 		if (swap) {
 			leaderboard->entries[i] = s2;
 			leaderboard->entries[i + 1] = s1;
-			i = 0;
+			i = -1; /* Set to -1 so it increments to 0 at the start of next loop. */
 		}
 	}
 }

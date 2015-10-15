@@ -140,6 +140,7 @@ void* handle_client(void *client_Info)
                 printf("Sending auth failed message to client on socket %d...\n", client->sock_fd);
                 write_to_socket(client->sock_fd, AUTH_FAILED);
                 client->connected = false;
+                break;
             }
 
             printf("Sending main menu to client on socket %d...\n", client->sock_fd);
@@ -159,11 +160,12 @@ void* handle_client(void *client_Info)
                     send_leaderboard(leaderboard, client);
                     break;
                 case QUIT:
-                    disconnect_client(client);
+                    client->connected = false;
                     break;
             }
         }
 
+        disconnect_client(client);
         sem_post(&sem_client_handler);
     }
 
@@ -228,6 +230,7 @@ bool play_hangman(Client_Info *client) {
         /* Have to receive 2 bytes otherwise it seems to read the enter key character on next loop. */
         if (read_from_socket(client->sock_fd, guess) == -1) {
             client->connected = false;
+            break;
         }
 
         update_guess(&game, guess[0]);
