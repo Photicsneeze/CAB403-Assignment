@@ -9,6 +9,7 @@
 #include <netdb.h>          /* For hostent struct */
 #include <netinet/in.h>     /* Contains structures for internet domain addresses */
 #include <pthread.h>
+#include <semaphore.h>
 #include <signal.h>         /* To handle SIGINT */
 #include <stdbool.h>
 #include <stdio.h>
@@ -34,7 +35,7 @@
 #define QUIT                3
 #define USERNAME_LENGTH     10
 #define PASSWORD_LENGTH     6
-#define MAX_CLIENTS         10
+#define MAX_CLIENTS         1
 
 /* ---- Menu Graphics ---- */
 const char WELCOME_MESSAGE[] = "\n"
@@ -64,9 +65,7 @@ const char MENU_PROMPT[] = "\nSelection option (1 - 3) --> ";
 
 /* ---- Type Definitions ---- */
 typedef struct {
-    int         id;
     int         sock_fd;
-    pthread_t   pthread_id;
     bool        connected;
     char        username[USERNAME_LENGTH];
     char        password[PASSWORD_LENGTH];
@@ -77,6 +76,10 @@ typedef struct addrinfo addrinfo;
 
 /* ---- Function Declarations ---- */
 void* handle_client(void *client_Info);
+
+void add_client_to_queue(int sock_fd);
+
+int get_client_from_queue();
 
 bool play_hangman(Client_Info *client);
 
