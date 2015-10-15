@@ -9,11 +9,18 @@
 
 /* ---- Global Variables ---- */
 static int              passive_sock_fd;            /* Initial socket descriptor */
-static Leaderboard      *leaderboard;
-static Client_Info      global_clients[MAX_CLIENTS];
-static int              num_clients_connected = 0;  /* Number of clients currently connected to server. */
-static bool             server_running;
-static pthread_mutex_t  leaderboard_mutex;
+static Leaderboard      *leaderboard;               /*  */
+static pthread_mutex_t  leaderboard_mutex;          /*  */
+static Client_Info      clients_infos[MAX_CLIENTS]; /*  */
+static pthread_t        threads[MAX_CLIENTS];       /*  */
+static int              sock_fds[MAX_CLIENTS];      /*  */
+static bool             server_running = false;     /*  */
+static sem_t            sem_client_handler;         /*  */
+static sem_t            sem_client;                 /*  */
+static int              next_queue_pos = 0;         /*  */
+static pthread_mutex_t  next_queue_mutex;           /*  */
+static int              client_to_handle = 0;       /*  */
+static pthread_mutex_t  client_to_handle_mutex;     /*  */
 
 /* ---- Function Definitions ---- */
 int main(int argc, char *argv[])
@@ -21,6 +28,8 @@ int main(int argc, char *argv[])
     addrinfo    addr;               /* Contains internet address information of server */
     char        port[PORT_LENGTH];
     int         temp_sock_fd;
+
+    server_running = true;
 
     /* Check the user provided the correct arguments. If no port provided, use default. */
     if (argc < 2) {
@@ -35,19 +44,49 @@ int main(int argc, char *argv[])
 
     signal(SIGINT, shutdown_server); /* Tell the program which function to call when ctrl + c is pressed. */
 
+    /* Initialse semaphore to max number of clients. Will decrement whenever a client is handled.
+     * This represents availale client handlers. Once MAX_CLIENTS connect it will == 0.
+     */
+    if (sem_init(&sem_client_handler, 0, MAX_CLIENTS) == -1) {
+        perror("sem_init");
+        exit(EXIT_FAILURE);
+    }
+
+    /* Initialse semaphore to 0. Will increment everytime a client is ready to be handled.
+     * Represents clients connected that are ready to be handled by a thread. Used to made threads wait
+     * until a client is available.
+     */
+    if (sem_init(&sem_client, 0, 0) == -1) {
+        perror("sem_init");
+        exit(EXIT_FAILURE);
+    }
+
+    /* Create a pool of threads to handle clients. Threads wait until a client is available to be handled. */
+    for (int i = 0; i < MAX_CLIENTS; i++) {
+        if (pthread_create(&threads[i], NULL, handle_client, (void *) &clients_infos[i]) != 0) {
+            perror("pthread_create");
+            exit(EXIT_FAILURE);
+        }
+    }
+    
+    /* Create a leaderboard and a mutex to ensure only 1 thread can access it at a time. */
     leaderboard = create_leaderboard();
     pthread_mutex_init(&leaderboard_mutex, NULL);
+    pthread_mutex_init(&next_queue_mutex, NULL);
+    pthread_mutex_init(&client_to_handle_mutex, NULL);
 
+    /* Create a socket to listen for connections. */
     passive_sock_fd = create_passive_socket(port, &addr);
 
-    server_running = true;
-
-    /* Main server loop. Accept incomming connections, send/recv data, close connection. */
+    /* Main server loop. Wait for an available handler, accept a connection, add client to queue. */
     while (server_running) {
+        /* Wait for an available client handler. */
+        sem_wait(&sem_client_handler);
+
         /* Accept a new connection, returns a new socket_descriptor, leaving original in listening state.
          * Accept is a blocking function and will wait for a connection if none available.
          */
-        printf("\nWaiting for connection...\n");
+        printf("Waiting to accept connection...\n\n");
         temp_sock_fd = accept(passive_sock_fd, addr.ai_addr, &addr.ai_addrlen);
         if (temp_sock_fd == -1) {
             perror("accept");
@@ -55,21 +94,15 @@ int main(int argc, char *argv[])
         }
         printf("Connection accepted.\n\n");
 
-        global_clients[num_clients_connected].sock_fd = temp_sock_fd;
-        global_clients[num_clients_connected].connected = true;
+        /* Add socket for connected client to queue of clients to be handled. */
+        add_client_to_queue(temp_sock_fd);
 
-        if (pthread_create(&global_clients[num_clients_connected].pthread_id, NULL, handle_client,
-                           (void *) &global_clients[num_clients_connected]) != 0) {
-            perror("pthread_create");
-            exit(EXIT_FAILURE);
-        }
-
-        num_clients_connected++;
+        /* Let thread know there is a client to be handled. */
+        sem_post(&sem_client);
     }
 
     /* Close socket. */
     close(passive_sock_fd);
-
     exit(EXIT_SUCCESS);
 }
 
@@ -79,46 +112,73 @@ void* handle_client(void *client_Info)
     int             menu_selection;
     bool            win;
     Client_Info     *client;
+    int             sock_fd;
 
-    client = (Client_Info *) client_Info;
+    while (server_running) {
+        sem_wait(&sem_client);
 
-    /* Send welcome message. */
-    printf("Sending welcome message to client on socket %d...\n", client->sock_fd);
-    write_to_client(client->sock_fd, WELCOME_MESSAGE);
+        client = (Client_Info *) client_Info;
 
-    while (server_running && client->connected) {
+        client->sock_fd = get_client_from_queue();
+        client->connected = true;
+
+        /* Send welcome message. */
+        printf("Sending welcome message to client on socket %d...\n", client->sock_fd);
+        write_to_client(client->sock_fd, WELCOME_MESSAGE);
+
         if (!authenticate_client(client)) {
             printf("Sending auth failed message to client on socket %d...\n", client->sock_fd);
             write_to_client(client->sock_fd, AUTH_FAILED);
             client->connected = false;
-            break;
         }
 
-        printf("Sending main menu to client on socket %d...\n", client->sock_fd);
-        write_to_client(client->sock_fd, MAIN_MENU);
+        while (client->connected) {
+            printf("Sending main menu to client on socket %d...\n", client->sock_fd);
+            write_to_client(client->sock_fd, MAIN_MENU);
 
-        menu_selection = get_menu_selection(client);
+            menu_selection = get_menu_selection(client);
 
-        switch (menu_selection) {
-            case PLAY_HANGMAN:;
-                win = play_hangman(client);
+            switch (menu_selection) {
+                case PLAY_HANGMAN:;
+                    win = play_hangman(client);
 
-                pthread_mutex_lock(&leaderboard_mutex);
-                update_score(leaderboard, client->username, win);
-                pthread_mutex_unlock(&leaderboard_mutex);
-                break;
-            case SHOW_LEADERBOARD:
-                send_leaderboard(leaderboard, client);
-                break;
-            case QUIT:
-                client->connected = false;
-                break;
+                    pthread_mutex_lock(&leaderboard_mutex);
+                    update_score(leaderboard, client->username, win);
+                    pthread_mutex_unlock(&leaderboard_mutex);
+                    break;
+                case SHOW_LEADERBOARD:
+                    send_leaderboard(leaderboard, client);
+                    break;
+                case QUIT:
+                    client->connected = false;
+                    break;
+            }
         }
+
+        disconnect_client(client);
+
+        sem_post(&sem_client_handler);
     }
 
-    disconnect_client(client);
-
     pthread_exit(NULL);
+}
+
+void add_client_to_queue(int sock_fd)
+{
+    pthread_mutex_lock(&next_queue_mutex);
+    sock_fds[next_queue_pos] = sock_fd;
+    next_queue_pos = next_queue_pos++ % MAX_CLIENTS;
+    pthread_mutex_unlock(&next_queue_mutex);
+}
+
+int get_client_from_queue()
+{
+    pthread_mutex_lock(&client_to_handle_mutex);
+    int client = sock_fds[client_to_handle];
+    client_to_handle = client_to_handle++ % MAX_CLIENTS;
+    pthread_mutex_unlock(&client_to_handle_mutex);
+
+    return client;
 }
 
 bool play_hangman(Client_Info *client) {
@@ -326,26 +386,25 @@ void disconnect_client(Client_Info *client)
     printf("Sending disconnect signal to client on socket %d...\n", client->sock_fd);
     write(client->sock_fd, DISCONNECT_SIGNAL, BUF_SIZE);
     close(client->sock_fd);
-
-    num_clients_connected--;
+    memset(client, 0, sizeof(Client_Info)); /* Clear the client info for next client to use. */
 }
 
 void shutdown_server(int sig)
 {
-    int num_clients = num_clients_connected;
+    for (int i = 0; i < MAX_CLIENTS; i++) {
+        //if (clients_infos[i].connected) {
+            disconnect_client(&clients_infos[i]);
+        //}
+    }
 
     server_running = false;
 
-    for (int i = 0; i < num_clients; i++) {
-        disconnect_client(&global_clients[i]);
-    }
-
-    for (int i = 0; i < num_clients; i++) {
-        pthread_join(global_clients[i].pthread_id, NULL);
+    for (int i = 0; i < MAX_CLIENTS; i++) {
+        pthread_join(threads[i], NULL);
     }
 
     free_leaderboard(leaderboard);
-    close(passive_sock_fd);
 
+    close(passive_sock_fd);
     exit(EXIT_SUCCESS);
 }
