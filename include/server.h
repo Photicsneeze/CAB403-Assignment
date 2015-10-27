@@ -63,6 +63,10 @@ const char MAIN_MENU[] = "\n"
 
 const char MENU_PROMPT[] = "\nSelection option (1 - 3) --> ";
 
+const char NO_LEADERBOARD[] = "\n==============================================================================\n"
+                              "\nThere is no information currently stored in the Leader Board. Try again later.\n"
+                              "\n==============================================================================\n";
+
 /* ---- Type Definitions ---- */
 typedef struct {
     int         sock_fd;

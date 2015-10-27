@@ -200,6 +200,8 @@ void update_score(Leaderboard *leaderboard, char *username, bool win)
 
 	score->games_played++;
 	score->games_won += win;
+
+	sort_leaderboard(leaderboard);
 }
 
 Score* add_user(Leaderboard *leaderboard, char *username)
