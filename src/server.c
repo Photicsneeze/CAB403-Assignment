@@ -10,6 +10,7 @@
 /* ---- Global Variables ---- */
 static int              passive_sock_fd;            /* Initial socket descriptor. */
 static Leaderboard      *leaderboard;               /*  */
+static Word             *word_list;
 static pthread_mutex_t  leaderboard_mutex;          /*  */
 static Client_Info      clients_infos[MAX_CLIENTS]; /*  */
 static pthread_t        threads[MAX_CLIENTS];       /*  */
@@ -70,10 +71,14 @@ int main(int argc, char *argv[])
 
     pthread_mutex_init(&next_queue_mutex, NULL);       /* Mutex for the positon of next free pos in queue. */
     pthread_mutex_init(&client_to_handle_mutex, NULL); /* Mutex for the positon of next client in queue. */
-    
+
     /* Create a leaderboard and a mutex to ensure only 1 thread can access it at a time. */
     leaderboard = create_leaderboard();
     pthread_mutex_init(&leaderboard_mutex, NULL);
+
+
+    word_list = malloc(sizeof(Word)*get_number_words_available());
+    create_word_list(word_list);
 
     /* Create a socket to listen for connections. */
     passive_sock_fd = create_passive_socket(port, &addr);
@@ -218,7 +223,7 @@ bool play_hangman(Client_Info *client) {
     char game_over_message[BUF_SIZE];
     bool win = false;
 
-    choose_words(&game, get_number_words_available());
+    choose_words(&game, word_list, get_number_words_available());
     number_of_guesses(&game);
 
     while (client->connected) {
@@ -267,10 +272,7 @@ bool play_hangman(Client_Info *client) {
 void send_leaderboard(Leaderboard *leaderboard, Client_Info *client) {
     char score_str[BUF_SIZE];
     if(leaderboard->num_scores==0){
-        strcat(score_str, "\n==============================================================================\n");
-        strcat(score_str, "\nThere is no information currently stored in the Leader Board. Try again later.\n");
-        strcat(score_str, "\n==============================================================================\n");
-        write_to_socket(client->sock_fd, score_str);
+        write_to_socket(client->sock_fd, NO_LEADERBOARD);
     }else{
         for (int i = 0; i < leaderboard->num_scores; i++) {
             memset(score_str, 0, BUF_SIZE);
@@ -469,6 +471,7 @@ void shutdown_server(int sig)
     }
 
     free_leaderboard(leaderboard);
+    free(word_list);
 
     close(passive_sock_fd);
     exit(EXIT_SUCCESS);

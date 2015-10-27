@@ -17,6 +17,38 @@
 
 
 /*
+ * Summary: Read hangman words from text file and load them into memory
+ *
+ * Parameters:
+ *        Word *word_list : pointer to array struct of words
+ *
+ */
+void create_word_list(Word *word_list)
+{
+    int num_words_available = get_number_words_available();
+
+
+    FILE *fr;
+    fr = fopen ("bin/hangman_text.txt", "rt");
+
+    char line[80];
+
+    int i = 0;
+    /* Read file iterating over each line */
+    /* saving the results in each line to unique variables */
+    while(fgets(line, 80, fr) != NULL)
+     {
+
+         sscanf (line, "%[^,],%s", word_list[i].word,word_list[i].adjective);
+         i++;
+
+     }
+     fclose(fr);  /* close the file prior to exiting the routine */
+
+}
+
+
+/*
  * Summary: Calculate the number of guesses allowed for given word
  *
  * Parameters:
@@ -37,6 +69,7 @@ void number_of_guesses(Game *game)
 
 
 
+
 /*
  * Summary: Randomly choose given word
  *          Also swap words around for proper displayment
@@ -46,39 +79,29 @@ void number_of_guesses(Game *game)
  *        int number : Number of words in list to search through
  *
  */
-void choose_words(Game *game, int number)
+void choose_words(Game *game, Word *word_list, int number)
 {
-    char *word1 = game->word1;
-    char *word2= game->word2;
-    FILE *fr;
-    fr = fopen ("bin/hangman_text.txt", "rt");
 
     srand(time(NULL));
-    int words = rand() % number;
+    int random_word = rand() % number;
 
-    char line[80];
+    strcpy(game->word1,word_list[random_word].word);
+    strcpy(game->word2,word_list[random_word].adjective);
 
-    int count = 0;
-    while(fgets(line, 80, fr) != NULL)
-     {
-         if(count == words){
-             sscanf (line, "%[^,],%s", word1,word2);
-             break;
-         }else{
-             count++;
-         }
-     }
-     fclose(fr);  /* close the file prior to exiting the routine */
-     game->len_word1 = strlen(word1);
-     game->len_word2 = strlen(word2);
 
-     for(int i=0;i<strlen(word1);i++){
-         game->guessed_word1_potion[i] = '_';
-     }
 
-     for(int i=0;i<strlen(word2);i++){
-         game->guessed_word2_potion[i] = '_';
-     }
+    game->len_word1 = strlen(game->word1);
+    game->len_word2 = strlen(game->word2);
+
+    for(int i=0;i<strlen(game->word1);i++){
+        game->guessed_word1_potion[i] = '_';
+    }
+
+    for(int i=0;i<strlen(game->word2);i++){
+        game->guessed_word2_potion[i] = '_';
+    }
+
+    //printf("\nWord1:%s,Word2:%s,len1:%d,len2:%d",game->word1,game->word2,game->len_word1,game->len_word2);
 }
 
 
