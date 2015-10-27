@@ -6,50 +6,53 @@
  *
  */
 
-#include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <strings.h>
+ #include <stdbool.h>
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <string.h>
+ #include <strings.h>
 
-#define INITIAL_SIZE		4
-#define RESIZE_FACTOR		2
-#define RESIZE_THRESHOLD	0.7
-#define USERNAME_BUFFER 	10
+#define USERNAME_LENGTH     10
 
-typedef struct {
-    char username[USERNAME_BUFFER];
-    int games_played;
-    int games_won;
-} Score;
+ typedef struct Score {
+ 	char username[USERNAME_LENGTH];
+ 	int games_played;
+ 	int games_won;
+ 	struct Score *next;
+ } Score;
 
-typedef struct {
-	Score *entries;
-	int current_size;
-	int num_scores;
-} Leaderboard;
+ typedef struct Leaderboard {
+ 	Score *first;
+    Score *last;
+ 	int num_scores;
+ } Leaderboard;
 
-/* ---- Public Functions---- */
-Leaderboard* create_leaderboard();
+ Leaderboard* create_leaderboard();
 
-void free_leaderboard(Leaderboard *leaderboard);
+ int swap_score(Leaderboard *leaderboard, int fromIndex, int toIndex);
 
-void update_score(Leaderboard *leaderboard, char *username, bool win);
+ void free_leaderboard(Leaderboard *leaderboard);
 
-void print_leaderboard(Leaderboard *leaderboard);
+ void sort_leaderboard(Leaderboard *leaderboard);
 
-/* ---- Private Functions ---- */
-void add_user(Leaderboard *leaderboard, char *username);
+ struct Score* get_score_at_index(Leaderboard *leaderboard, int fromIndex);
 
-void add_score(Leaderboard *leaderboard, Score score);
+ bool alphabetical_order(char *str1, char *str2);
 
-/* If user found, return index of user. Else return -1. */
-int contains_user(Leaderboard *leaderboard, char *username);
+ void pop(Leaderboard *leaderboard, int index);
 
-void sort_leaderboard(Leaderboard *leaderboard);
+ int move_score(Leaderboard *leaderboard, int fromIndex, int toIndex);
 
-void resize_leaderboard(Leaderboard *leaderboard);
+ void push(Leaderboard *leaderboard, Score *score, int index);
 
-void score_to_string(char *str, Score score);
+ void update_score(Leaderboard *leaderboard, char *username, bool win);
 
-bool alphabetical_order(char *str1, char *str2);
+ struct Score* add_user(Leaderboard *leaderboard, char *username);
+
+ struct Score* get_score(Leaderboard *leaderboard, char *username);
+
+ bool contains_user(Leaderboard *leaderboard, char *username);
+
+ void print_leaderboard(Leaderboard *leaderboard);
+
+ void score_to_string(char *str, Score *score);
