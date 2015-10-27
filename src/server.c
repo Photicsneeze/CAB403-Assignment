@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
     if (argc < 2) {
         printf("No port provided. Using default port %s.\n", DEFAULT_PORT);
         strcpy(port, DEFAULT_PORT);
-    } else if (argc == 2) { /* FIX THIS! */
+    } else if (argc == 2) {
         strcpy(port, argv[1]);
     } else {
         printf("Usage: %s <port>\n", argv[0]);
@@ -82,9 +82,6 @@ int main(int argc, char *argv[])
 
     /* Create a socket to listen for connections. */
     passive_sock_fd = create_passive_socket(port, &addr);
-
-
-
 
     /* Main server loop. Wait for an available handler, accept a connection, add client to queue. */
     while (server_running) {
@@ -138,11 +135,7 @@ void* handle_client(void *client_Info)
         write_to_socket(client->sock_fd, WELCOME_MESSAGE);
 
         if (get_username(client) == -1 || get_password(client) == -1) {
-            client->connected = false;
-        }
-
-        if (!server_running) { /* Tells thread to quit when server is shutdown while waiting for client. */
-            break;
+            break; /* Tells thread to quit when server is shutdown while waiting for client. */
         }
 
         while (client->connected) {/* added in server_running check so that it doesnt enter loop if server quits at users login */
@@ -190,7 +183,6 @@ void* handle_client(void *client_Info)
         sem_post(&sem_client_handler);
     }
 
-    //pthread_exit(NULL);
     return NULL;
 }
 
@@ -296,7 +288,7 @@ int get_username(Client_Info *client)
     }
     printf("Username received from client on socket %d...\n", client->sock_fd);
 
-    return 1;
+    return 0;
 }
 
 int get_password(Client_Info *client)
@@ -311,7 +303,7 @@ int get_password(Client_Info *client)
     }
     printf("Password received from client on socket %d...\n", client->sock_fd);
 
-    return 1;
+    return 0;
 }
 
 bool authenticate_login(char *username, char *password)
@@ -375,6 +367,7 @@ int read_from_socket(int sock_fd, char *str)
     }
 
     if (strcmp(str, DISCONNECT_SIGNAL) == 0) {
+        printf("\nReceived disconnect signal from client on socket %d.\n", sock_fd);
         return -1;
     }
 
@@ -447,27 +440,22 @@ void shutdown_server(int sig)
     server_running = false;
 
     for (int i = 0; i < MAX_CLIENTS; i++) {
-        printf("\n");
-        printf("Client[%d].sock_fd = %d\n", i, clients_infos[i].sock_fd);
-        printf("Client[%d].connected = %d\n", i, clients_infos[i].connected);
-        printf("Client[%d].username = %s\n", i, clients_infos[i].username);
-        printf("Client[%d].password = %s\n", i, clients_infos[i].password);
-    }
-
-    for (int i = 0; i < MAX_CLIENTS; i++) {
         sem_post(&sem_client);
     }
 
     for (int i = 0; i < MAX_CLIENTS; i++) {
-        if (clients_infos[i].sock_fd > 0) {
+        if (clients_infos[i].connected) {
             disconnect_client(&clients_infos[i]);
         }
     }
 
     printf("\n\n");
     for (int i = 0; i < MAX_CLIENTS; i++) {
-        printf("Joining thread %d...\n", i);
-        pthread_join(threads[i], NULL);
+        if (pthread_join(threads[i], NULL)) {
+            fprintf(stderr, "Error joining thread\n");
+            exit(EXIT_FAILURE);
+        }
+        printf("Thread %d has joined.\n", i);
     }
 
     free_leaderboard(leaderboard);
