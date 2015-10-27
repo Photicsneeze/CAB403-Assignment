@@ -31,6 +31,8 @@ int main(int argc, char *argv[])
 
     server_running = true;
 
+    signal(SIGINT, shutdown_server); /* Tell the program which function to call when ctrl + c is pressed. */
+
     /* Check the user provided the correct arguments. If no port provided, use default. */
     if (argc < 2) {
         printf("No port provided. Using default port %s.\n", DEFAULT_PORT);
@@ -42,7 +44,6 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
-    signal(SIGINT, shutdown_server); /* Tell the program which function to call when ctrl + c is pressed. */
 
     /* Initialse semaphore to max number of clients. Will decrement whenever a client is handled.
      * This represents availale client handlers. Once MAX_CLIENTS connect it will == 0.
@@ -68,7 +69,7 @@ int main(int argc, char *argv[])
             exit(EXIT_FAILURE);
         }
     }
-    
+
     /* Create a leaderboard and a mutex to ensure only 1 thread can access it at a time. */
     leaderboard = create_leaderboard();
     pthread_mutex_init(&leaderboard_mutex, NULL);
@@ -77,6 +78,9 @@ int main(int argc, char *argv[])
 
     /* Create a socket to listen for connections. */
     passive_sock_fd = create_passive_socket(port, &addr);
+
+
+
 
     /* Main server loop. Wait for an available handler, accept a connection, add client to queue. */
     while (server_running) {
@@ -134,8 +138,12 @@ void* handle_client(void *client_Info)
             client->connected = false;
         }
 
-        while (client->connected) {
+        if (!server_running) { /* Tells thread to quit when server is shutdown while waiting for client. */
+            break;
+        }
 
+
+        while (client->connected) {/* added in server_running check so that it doesnt enter loop if server quits at users login */
             if (!authenticate_login(client->username, client->password)) {
                 printf("Sending auth failed message to client on socket %d...\n", client->sock_fd);
                 write_to_socket(client->sock_fd, AUTH_FAILED);
@@ -147,6 +155,10 @@ void* handle_client(void *client_Info)
             write_to_socket(client->sock_fd, MAIN_MENU);
 
             menu_selection = get_menu_selection(client);
+
+            if (!server_running) { /* Tells thread to quit when server is shutdown while waiting for client. */
+                break;
+            }
 
             switch (menu_selection) {
                 case PLAY_HANGMAN:;
@@ -164,12 +176,16 @@ void* handle_client(void *client_Info)
                     break;
             }
         }
+        if (!server_running) { /* Tells thread to quit when server is shutdown while waiting for client. */
+            break;
+        }
 
         disconnect_client(client);
         sem_post(&sem_client_handler);
     }
 
     pthread_exit(NULL);
+
 }
 
 void add_client_to_queue(int sock_fd)
@@ -244,12 +260,20 @@ bool play_hangman(Client_Info *client) {
 
 void send_leaderboard(Leaderboard *leaderboard, Client_Info *client) {
     char score_str[BUF_SIZE];
-
-    for (int i = 0; i < leaderboard->num_scores; i++) {
-        memset(score_str, 0, BUF_SIZE);
-        score_to_string(score_str, leaderboard->entries[i]);
+    if(leaderboard->num_scores==0){
+        strcat(score_str, "\n==============================================================================\n");
+        strcat(score_str, "\nThere is no information currently stored in the Leader Board. Try again later.\n");
+        strcat(score_str, "\n==============================================================================\n");
         write_to_socket(client->sock_fd, score_str);
+    }else{
+        for (int i = 0; i < leaderboard->num_scores; i++) {
+            memset(score_str, 0, BUF_SIZE);
+            score_to_string(score_str, get_score_at_index(leaderboard,i));
+            write_to_socket(client->sock_fd, score_str);
+        }
     }
+
+
 }
 
 int get_username(Client_Info *client)
@@ -354,7 +378,7 @@ int create_passive_socket(char *port, addrinfo *addr)
 {
     int         ret;            /* Return value for getaddrinfo() */
     int         sock_fd;        /* Socket descriptor to return */
-    addrinfo    hints;          /* Used to set criteria for getaddrinfo() */
+    addrinfo    hints;           /* Used to set criteria for getaddrinfo() */
     addrinfo    *addr_list;     /* Linked list of addresses returned by getaddrinfo() */
 
     memset(&hints, 0, sizeof(struct addrinfo));
@@ -409,6 +433,8 @@ void disconnect_client(Client_Info *client)
 
 void shutdown_server(int sig)
 {
+    server_running = false;
+
     for (int i = 0; i < MAX_CLIENTS; i++) {
         sem_post(&sem_client);
     }
@@ -419,9 +445,8 @@ void shutdown_server(int sig)
         }
     }
 
-    server_running = false;
-
     for (int i = 0; i < MAX_CLIENTS; i++) {
+        printf("\n\nJoin\n");
         pthread_join(threads[i], NULL);
     }
 
