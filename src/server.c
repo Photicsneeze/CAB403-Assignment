@@ -112,11 +112,14 @@ int main(int argc, char *argv[])
 
 void* handle_client(void *client_Info)
 {
-    bool            authenticated = false;
     int             menu_selection;
     bool            win;
     Client_Info     *client;
-    int             sock_fd;
+
+    client = (Client_Info *) client_Info;
+
+    client->connected = false;
+    client->sock_fd = 0;
 
     while (server_running) {
         sem_wait(&sem_client);
@@ -124,8 +127,6 @@ void* handle_client(void *client_Info)
         if (!server_running) { /* Tells thread to quit when server is shutdown while waiting for client. */
             break;
         }
-
-        client = (Client_Info *) client_Info;
 
         client->sock_fd = get_client_from_queue();
         client->connected = true;
@@ -141,7 +142,6 @@ void* handle_client(void *client_Info)
         if (!server_running) { /* Tells thread to quit when server is shutdown while waiting for client. */
             break;
         }
-
 
         while (client->connected) {/* added in server_running check so that it doesnt enter loop if server quits at users login */
             if (!authenticate_login(client->username, client->password)) {
@@ -176,6 +176,7 @@ void* handle_client(void *client_Info)
                     break;
             }
         }
+
         if (!server_running) { /* Tells thread to quit when server is shutdown while waiting for client. */
             break;
         }
@@ -184,23 +185,27 @@ void* handle_client(void *client_Info)
         sem_post(&sem_client_handler);
     }
 
-    pthread_exit(NULL);
-
+    //pthread_exit(NULL);
+    return NULL;
 }
 
 void add_client_to_queue(int sock_fd)
 {
     pthread_mutex_lock(&next_queue_mutex);
+    printf("next_queue_pos: %d\n", next_queue_pos);
     sock_fds[next_queue_pos] = sock_fd;
-    next_queue_pos = next_queue_pos++ % MAX_CLIENTS;
+    next_queue_pos++;
+    next_queue_pos = next_queue_pos % MAX_CLIENTS;
     pthread_mutex_unlock(&next_queue_mutex);
 }
 
 int get_client_from_queue()
 {
     pthread_mutex_lock(&client_to_handle_mutex);
+    printf("client_to_handle: %d\n", client_to_handle);
     int client = sock_fds[client_to_handle];
-    client_to_handle = client_to_handle++ % MAX_CLIENTS;
+    client_to_handle++;
+    client_to_handle = client_to_handle % MAX_CLIENTS;
     pthread_mutex_unlock(&client_to_handle_mutex);
 
     return client;
@@ -436,6 +441,14 @@ void shutdown_server(int sig)
     server_running = false;
 
     for (int i = 0; i < MAX_CLIENTS; i++) {
+        printf("\n");
+        printf("Client[%d].sock_fd = %d\n", i, clients_infos[i].sock_fd);
+        printf("Client[%d].connected = %d\n", i, clients_infos[i].connected);
+        printf("Client[%d].username = %s\n", i, clients_infos[i].username);
+        printf("Client[%d].password = %s\n", i, clients_infos[i].password);
+    }
+
+    for (int i = 0; i < MAX_CLIENTS; i++) {
         sem_post(&sem_client);
     }
 
@@ -445,8 +458,9 @@ void shutdown_server(int sig)
         }
     }
 
+    printf("\n\n");
     for (int i = 0; i < MAX_CLIENTS; i++) {
-        printf("\n\nJoin\n");
+        printf("Joining thread %d...\n", i);
         pthread_join(threads[i], NULL);
     }
 
