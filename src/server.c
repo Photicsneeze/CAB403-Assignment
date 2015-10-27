@@ -127,7 +127,6 @@ void* handle_client(void *client_Info)
 
         client->sock_fd = get_client_from_queue();
         client->connected = true;
-        authenticated = false;
 
         /* Send welcome message. */
         printf("Sending welcome message to client on socket %d...\n", client->sock_fd);
@@ -217,6 +216,7 @@ bool play_hangman(Client_Info *client) {
     char guess[2];                  /* Not sure why this had to be 2 char array. Breaks as a char. */
     char game_interface[BUF_SIZE];
     char game_over_message[BUF_SIZE];
+    bool win = false;
 
     choose_words(&game, get_number_words_available());
     number_of_guesses(&game);
@@ -228,12 +228,13 @@ bool play_hangman(Client_Info *client) {
         write_to_socket(client->sock_fd, game_interface);
 
         if (check_complete(&game)) { /* Win */
+            win = true;
             sprintf(game_over_message,
                     "\n\nGame Over\nWell done %s! You won this round of Hangman!", client->username);
 
             printf("Sending win message to client on socket %d...\n", client->sock_fd);
             write_to_socket(client->sock_fd, game_over_message);
-            return true;
+            return win;
         }
 
         if (game.guess_count >= game.number_guesses) { /* Lose */
@@ -243,13 +244,14 @@ bool play_hangman(Client_Info *client) {
 
             printf("Sending lose message to client on socket %d...\n", client->sock_fd);
             write_to_socket(client->sock_fd, game_over_message);
-            return false;
+            return win;
         }
 
         printf("Waiting for guess from client on socket %d...\n", client->sock_fd);
+        /* Have to receive 2 bytes otherwise it seems to read the enter key character on next loop. */
         if (read_from_socket(client->sock_fd, guess) == -1) {
             client->connected = false;
-            return false;
+            break;
         }
 
         update_guess(&game, guess[0]);
@@ -257,7 +259,10 @@ bool play_hangman(Client_Info *client) {
         game.guesses_made[game.guess_count] = guess[0];
         game.guess_count++;
     }
+
+    return win;
 }
+
 
 void send_leaderboard(Leaderboard *leaderboard, Client_Info *client) {
     char score_str[BUF_SIZE];
