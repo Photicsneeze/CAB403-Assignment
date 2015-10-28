@@ -94,11 +94,11 @@ void choose_words(Game *game, Word *word_list, int number)
     game->len_word2 = strlen(game->word2);
 
     for(int i=0;i<strlen(game->word1);i++){
-        game->guessed_word1_potion[i] = '_';
+        game->guessed_word1_portion[i] = '_';
     }
 
     for(int i=0;i<strlen(game->word2);i++){
-        game->guessed_word2_potion[i] = '_';
+        game->guessed_word2_portion[i] = '_';
     }
 
     //printf("\nWord1:%s,Word2:%s,len1:%d,len2:%d",game->word1,game->word2,game->len_word1,game->len_word2);
@@ -163,13 +163,13 @@ void display_game(Game *game, char *str)
 
     strcat(str, "\n\nWord: ");
     for(int i = 0; i < game->len_word1; i++) {
-        sprintf(temp, "%c ", game->guessed_word1_potion[i]);
+        sprintf(temp, "%c ", game->guessed_word1_portion[i]);
         strcat(str, temp);
     }
 
     strcat(str, "    ");
     for(int i = 0; i < game->len_word2; i++) {
-        sprintf(temp, "%c ", game->guessed_word2_potion[i]);
+        sprintf(temp, "%c ", game->guessed_word2_portion[i]);
         strcat(str, temp);
     }
     strcat(str, "\n\nEnter your guess - ");
@@ -188,12 +188,12 @@ void update_guess(Game *game, char guess)
 {
     for(int i = 0; i < game->len_word1; i++) {
         if (game->word1[i] == guess)
-            game->guessed_word1_potion[i] = guess;
+            game->guessed_word1_portion[i] = guess;
     }
 
     for(int i = 0; i < (game->len_word2); i++) {
         if (game->word2[i] == guess)
-            game->guessed_word2_potion[i] = guess;
+            game->guessed_word2_portion[i] = guess;
     }
 }
 
@@ -210,12 +210,12 @@ void update_guess(Game *game, char guess)
 int check_complete(Game *game)
 {
     for(int i=0;i<game->len_word1;i++){
-        if(game->guessed_word1_potion[i] == '_')
+        if(game->guessed_word1_portion[i] == '_')
                 return 0;
     }
 
     for(int i=0;i<(game->len_word2);i++){
-        if(game->guessed_word2_potion[i] == '_')
+        if(game->guessed_word2_portion[i] == '_')
                 return 0;
     }
     return 1;

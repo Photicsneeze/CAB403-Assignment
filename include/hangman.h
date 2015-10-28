@@ -17,8 +17,8 @@ typedef struct{
     char word2[MAX_WORD_LENGTH];
     int len_word1;
     int len_word2;
-    char guessed_word1_potion[MAX_WORD_LENGTH];
-    char guessed_word2_potion[MAX_WORD_LENGTH];
+    char guessed_word1_portion[MAX_WORD_LENGTH];
+    char guessed_word2_portion[MAX_WORD_LENGTH];
     char guesses_made[26];
 } Game;
 
