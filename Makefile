@@ -9,8 +9,6 @@ clientgdb:
 servergdb:
 	gcc -g -std=c99 -D_POSIX_SOURCE -pthread src/server.c -I./include -o bin/server
 
-test:
-	gcc -std=c99 -D_POSIX_SOURCE -pthread src/test.c src/leaderboard.c -I./include -o bin/test
 
 clean:
 	rm bin/server

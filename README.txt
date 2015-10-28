@@ -14,3 +14,4 @@ To connect a client,execute this command in terminal:
 	./bin/client localhost port_number
 	
 Where port_number is the same port used in the server command.
+
