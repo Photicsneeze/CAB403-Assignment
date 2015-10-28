@@ -9,19 +9,19 @@
 
 /* ---- Global Variables ---- */
 static int              passive_sock_fd;            /* Initial socket descriptor. */
-static Leaderboard      *leaderboard;               /*  */
+static Leaderboard      *leaderboard;               
 static Word             *word_list;
-static pthread_mutex_t  leaderboard_mutex;          /*  */
-static Client_Info      clients_infos[MAX_CLIENTS]; /*  */
-static pthread_t        threads[MAX_CLIENTS];       /*  */
-static int              sock_fds[MAX_CLIENTS];      /*  */
-static bool             server_running = true;      /*  */
-static sem_t            sem_client_handler;         /*  */
-static sem_t            sem_client;                 /*  */
-static int              next_queue_pos = 0;         /*  */
-static pthread_mutex_t  next_queue_mutex;           /*  */
-static int              client_to_handle = 0;       /*  */
-static pthread_mutex_t  client_to_handle_mutex;     /*  */
+static pthread_mutex_t  leaderboard_mutex;          
+static Client_Info      clients_infos[MAX_CLIENTS]; 
+static pthread_t        threads[MAX_CLIENTS];       
+static int              sock_fds[MAX_CLIENTS];      
+static bool             server_running = true;      
+static sem_t            sem_client_handler;         /* Semaphore to count number of available handlers. */
+static sem_t            sem_client;                 /* Semaphore to count number clients available to handle. */
+static int              next_queue_pos = 0;         /* Position of next empty space to put a client. */
+static pthread_mutex_t  next_queue_mutex;           /* Mutex to protect next_queue_pos. */
+static int              client_to_handle = 0;       /* Position of the next client to handle. */
+static pthread_mutex_t  client_to_handle_mutex;     /* Mutex to protect client_to_handle. */
 
 /* ---- Function Definitions ---- */
 int main(int argc, char *argv[])
@@ -170,7 +170,7 @@ void* handle_client(void *client_Info)
                     send_leaderboard(leaderboard, client);
                     break;
                 case QUIT:
-                    disconnect_client(client);
+                    client->connected = false;
                     break;
             }
         }
